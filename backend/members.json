@@ -1,0 +1,62 @@
+[
+    {
+        "id": 1,
+        "name": "社长",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+        "detail": "全面负责社团事务，统筹规划。"
+    },
+    {
+        "id": 2,
+        "name": "副社长",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+        "detail": "协助社长工作，负责外部联络。"
+    },
+    {
+        "id": 3,
+        "name": "宣传部",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+        "detail": "负责社团海报制作、公众号运营。"
+    },
+    {
+        "id": 4,
+        "name": "活动部",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Caly",
+        "detail": "策划并执行社团日常活动。"
+    },
+    {
+        "id": 5,
+        "name": "财务部",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack",
+        "detail": "管理社团经费。"
+    },
+    {
+        "id": 6,
+        "name": "技术部",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Kiki",
+        "detail": "网站维护与技术支持。"
+    },
+    {
+        "id": 7,
+        "name": "后勤部",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Lola",
+        "detail": "物资采购与管理。"
+    },
+    {
+        "id": 8,
+        "name": "张三",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
+        "detail": "核心骨干。"
+    },
+    {
+        "id": 9,
+        "name": "李四",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Nala",
+        "detail": "积极分子。"
+    },
+    {
+        "id": 10,
+        "name": "王五",
+        "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver",
+        "detail": "汉服爱好者。"
+    }
+]
