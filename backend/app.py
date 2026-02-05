@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import json
@@ -6,6 +7,10 @@ import os
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+def isTrigger(trigger):
+    if trigger["type"] == "date":
+        return trigger["date"] == datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
 
 # Helper to load members
 def load_members():
@@ -35,12 +40,14 @@ def get_daily():
             "description": "今日社团摄影精选"
         })
     else:
-        quotes = [
-            "汉服之美，在于传承。",
-            "岂曰无衣，与子同袍。",
-            "云想衣裳花想容，春风拂槛露华浓。",
-            "着我汉家衣裳，兴我礼仪之邦。"
-        ]
+        with open('quotes.json', 'r', encoding='utf-8') as f:
+            quotes_data = json.load(f)
+        quotes = quotes_data.get("general", [])
+
+        for i in range(len(quotes_data["special"])):
+             if isTrigger(quotes_data["special"][i]["trigger"]):
+                return jsonify(quotes_data["special"][i]["content"])
+
         return jsonify({
             "type": "quote",
             "content": random.choice(quotes),
