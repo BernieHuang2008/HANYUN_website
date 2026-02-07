@@ -25,7 +25,7 @@ class TursoDriver(msql.drivers.sqlite):
 
 # msql.set_driver(TursoDriver)
 # db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
-conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
+conn = libsql.connect("hanyun.db", sync_url=url, auth_token=auth_token)
 conn.sync()
 raise Exception("gua")
 tb_user = db["user"]
