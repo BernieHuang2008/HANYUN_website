@@ -35,13 +35,13 @@ def load_data(key):
         except Exception as e:
             print(f"Failed to load {key} from Edge Config: {e}")
 
-    # Fallback to local file
+    # Fallback to local 'edgeconfig.json' simulation
     try:
-        filename = f"{key}.json"
-        with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        with open('edgeconfig.json', 'r', encoding='utf-8') as f:
+            all_data = json.load(f)
+            return all_data.get(key, [] if key == 'members' else {}) # Default based on expected type if possible, or just checking later
     except FileNotFoundError:
-        return []
+        return [] if key == 'members' else {}
 
 # Helper to save data to Edge Config (requires VERCEL_API_TOKEN) and local file
 def save_data(key, data):
@@ -77,11 +77,21 @@ def save_data(key, data):
         except Exception as e:
             print(f"Exception updating Edge Config: {e}")
 
-    # 2. Update local file (Fallback & Dev)
+    # 2. Update local 'edgeconfig.json' simulation (Fallback & Dev)
     try:
-        filename = f"{key}.json"
+        filename = 'edgeconfig.json'
+        all_data = {}
+        if os.path.exists(filename):
+            with open(filename, 'r', encoding='utf-8') as f:
+                try:
+                    all_data = json.load(f)
+                except json.JSONDecodeError:
+                    all_data = {}
+        
+        all_data[key] = data
+        
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
+            json.dump(all_data, f, ensure_ascii=False, indent=4)
     except Exception as e:
         print(f"Error saving local file {key}: {e}")
 
@@ -169,13 +179,27 @@ def get_daily():
             "description": "今日社团摄影精选"
         })
     else:
-        with open('quotes.json', 'r', encoding='utf-8') as f:
-            quotes_data = json.load(f)
+        quotes_data = load_data('quotes')
+        if not quotes_data:
+             return jsonify({
+                "type": "quote",
+                "content": "No quotes available.",
+                "description": "System"
+            })
+
         quotes = quotes_data.get("general", [])
 
-        for i in range(len(quotes_data["special"])):
-             if isTrigger(quotes_data["special"][i]["trigger"]):
-                return jsonify(quotes_data["special"][i]["content"])
+        if "special" in quotes_data:
+            for item in quotes_data["special"]:
+                 if isTrigger(item["trigger"]):
+                    return jsonify(item["content"])
+
+        if not quotes:
+             return jsonify({
+                "type": "quote",
+                "content": "Stay inspired!",
+                "description": "Daily Quote"
+             })
 
         return jsonify({
             "type": "quote",
