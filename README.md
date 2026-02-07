@@ -15,7 +15,7 @@
    ```bash
    python backend/app.py
    ```
-   Server will run at `http://127.0.0.1:5000`
+   Server will run at `http://127.0.0.1:3000`
 
 ### Frontend (Node.js)
 1. Navigate to the frontend folder:
