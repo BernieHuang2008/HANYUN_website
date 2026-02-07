@@ -9,9 +9,10 @@ import MercurySQL as msql
 import libsql
 
 # load .env.local for dev
-# load_dotenv("backend/.env.local")
-# url = os.getenv("TURSO_DATABASE_URL")
-# auth_token = os.getenv("TURSO_AUTH_TOKEN")
+if os.path.exists("backend/.env.local"):
+    load_dotenv("backend/.env.local")
+url = os.getenv("TURSO_DATABASE_URL")
+auth_token = os.getenv("TURSO_AUTH_TOKEN")
 
 
 # init msql
