@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import EditModal from './EditModal';
+import { useTranslation } from '../LanguageContext';
 
 const ClubBanner = ({ data, isAdminMode, onSave }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
 
   const banner = data || {
       // Fallback
       "imageUrl": "https://picsum.photos/800/400?grayscale",
-      "title": "Loading...",
+      "title": t('loading'),
       "subtitle": ""
   };
 
@@ -18,7 +20,7 @@ const ClubBanner = ({ data, isAdminMode, onSave }) => {
             onClick={() => setIsEditing(true)}
             style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, fontSize: '0.8rem' }}
           >
-            Edit
+            {t('edit')}
           </button>
       )}
       <EditModal 
@@ -29,7 +31,7 @@ const ClubBanner = ({ data, isAdminMode, onSave }) => {
             setIsEditing(false);
         }} 
         data={banner} 
-        title="Banner" 
+        title={t('clubBanner')}
       />
       <img 
         src={banner.imageUrl} 

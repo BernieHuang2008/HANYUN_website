@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useTranslation } from '../LanguageContext';
 
 const Footer = () => {
+  const { t } = useTranslation();
   const [suggestion, setSuggestion] = useState('');
 
   const handleSubmit = async (e) => {
@@ -10,30 +12,30 @@ const Footer = () => {
 
     try {
       await axios.post('/api/suggestion', { suggestion });
-      alert("感谢您的建议！");
+      alert(t('suggestionSuccess'));
       setSuggestion("");
     } catch (error) {
-      alert("提交失败，请稍后再试。");
+      alert(t('suggestionFail'));
     }
   };
 
   return (
     <footer className="footer">
       <div className="suggestion-box">
-        <h3>建议信箱</h3>
+        <h3>{t('suggestionBox')}</h3>
         <form onSubmit={handleSubmit}>
           <input 
             type="text" 
             className="suggestion-input"
-            placeholder="请输入您的建议..."
+            placeholder={t('suggestionPlaceholder')}
             value={suggestion}
             onChange={(e) => setSuggestion(e.target.value)}
           />
-          <button type="submit" className="suggestion-btn">提交</button>
+          <button type="submit" className="suggestion-btn">{t('submit')}</button>
         </form>
       </div>
       <div className="copyright">
-        &copy; {new Date().getFullYear()} 深圳实验学校汉韵社 版权所有
+        {t('copyright', { year: new Date().getFullYear() })}
       </div>
     </footer>
   );

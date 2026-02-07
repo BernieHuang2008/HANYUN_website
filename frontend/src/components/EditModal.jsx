@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../LanguageContext';
 
 // --- Helper Components for Visual Editing ---
 
@@ -26,8 +27,19 @@ const PrimitiveInput = ({ value, onChange }) => {
 };
 
 const ObjectEditor = ({ data, onChange }) => {
+  const { t } = useTranslation();
   const handleChange = (key, newValue) => {
     onChange({ ...data, [key]: newValue });
+  };
+
+  const getLabel = (key) => {
+      // Try to translate the key (e.g., "title" -> "key_title" -> "标题")
+      const transKey = `key_${key}`;
+      const translated = t(transKey);
+      // If translation key doesn't exist or returns the key itself (if simple fallback), 
+      // check if it equals the transKey (meaning missing).
+      // My implementation of t returns key if missing, so t('key_title') returns 'key_title' if missing.
+      return translated !== transKey ? translated : key;
   };
 
   return (
@@ -35,7 +47,7 @@ const ObjectEditor = ({ data, onChange }) => {
       {Object.keys(data).map(key => (
         <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <label style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#555' }}>
-            {key}:
+            {getLabel(key)}:
           </label>
           {typeof data[key] === 'object' && data[key] !== null ? (
              <div style={{ paddingLeft: '10px', borderLeft: '2px solid #eee' }}>
@@ -43,7 +55,7 @@ const ObjectEditor = ({ data, onChange }) => {
                    <ObjectEditor data={data[key]} onChange={(val) => handleChange(key, val)} />
                ) : (
                     <div style={{color: '#999', fontStyle: 'italic', fontSize: '0.8rem'}}>
-                        List (switch to Advanced mode to edit)
+                        {t('listLabel')}
                     </div>
                )}
              </div>
@@ -57,6 +69,7 @@ const ObjectEditor = ({ data, onChange }) => {
 };
 
 const ArrayEditor = ({ data, onChange }) => {
+  const { t } = useTranslation();
   const addItem = () => {
     // Try to guess template from first item
     let template = {};
@@ -98,13 +111,13 @@ const ArrayEditor = ({ data, onChange }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 zIndex: 1
             }}
-            title="Remove Item"
+            title={t('removeItem')}
           >
             ×
           </button>
           
           <div style={{ marginBottom: '8px', fontSize: '0.8rem', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Item {index + 1}
+              {t('itemLabel', { index: index + 1 })}
           </div>
           
           {typeof item === 'object' && item !== null ? (
@@ -122,7 +135,7 @@ const ArrayEditor = ({ data, onChange }) => {
             fontWeight: 'bold'
         }}
       >
-        + Add Item
+        {t('addItem')}
       </button>
     </div>
   );
@@ -131,6 +144,7 @@ const ArrayEditor = ({ data, onChange }) => {
 // --- Main Modal ---
 
 const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState('visual'); // 'visual' or 'json'
   const [currentData, setCurrentData] = useState(null);
   const [jsonString, setJsonString] = useState('');
@@ -160,7 +174,7 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
       setMode('visual');
       setError(null);
     } catch (e) {
-      setError("Invalid JSON: Can't switch to visual mode yet. Fix errors first.");
+      setError(t('invalidJson')); // Simplified error
     }
   };
 
@@ -171,7 +185,7 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
         onSave(parsed);
         onClose();
       } catch (e) {
-        setError("Invalid JSON: " + e.message);
+        setError(t('invalidJson') + ": " + e.message);
       }
     } else {
       onSave(currentData);
@@ -190,9 +204,9 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
             <h3 style={{ margin: 0, color: '#333' }}>
-                Edit {title} 
+                {t('editModalTitle', { title })} 
                 <span style={{ marginLeft: '10px', fontSize:'0.75rem', fontWeight:'normal', color:'#888', backgroundColor: '#eee', padding: '2px 6px', borderRadius: '4px' }}>
-                    {mode === 'visual' ? 'Visual Mode' : 'Advanced JSON Mode'}
+                    {mode === 'visual' ? t('visualMode') : t('jsonMode')}
                 </span>
             </h3>
             <div style={{ display: 'flex', gap: '5px' }}>
@@ -204,7 +218,7 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
                     color: '#555'
                   }}
                 >
-                    {mode === 'visual' ? '🔧 Advanced' : '🎨 Visual Editor'}
+                    {mode === 'visual' ? t('switchToAdvanced') : t('switchToVisual')}
                 </button>
             </div>
         </div>
@@ -234,7 +248,7 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-          <button onClick={onClose} style={{ padding: '8px 16px', cursor: 'pointer', background: 'transparent', border: '1px solid #ccc', borderRadius: '4px' }}>Cancel</button>
+          <button onClick={onClose} style={{ padding: '8px 16px', cursor: 'pointer', background: 'transparent', border: '1px solid #ccc', borderRadius: '4px' }}>{t('cancelBtn')}</button>
           <button 
             onClick={handleSave} 
             style={{ 
@@ -242,7 +256,7 @@ const EditModal = ({ isOpen, onClose, onSave, data, title }) => {
                 border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
             }}
           >
-            Save Changes
+            {t('saveChanges')}
           </button>
         </div>
       </div>

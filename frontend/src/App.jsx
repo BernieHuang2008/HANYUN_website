@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from './LanguageContext';
 import Login from './components/Login';
 import MemberWall from './components/MemberWall';
 import Resources from './components/Resources';
@@ -9,6 +10,7 @@ import DailyCalendar from './components/DailyCalendar';
 import Footer from './components/Footer';
 
 function App() {
+  const { t, toggleLanguage, language } = useTranslation();
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [content, setContent] = useState(null);
@@ -59,11 +61,17 @@ function App() {
   return (
     <div className="app-container">
       <header style={{ padding: '20px', textAlign: 'center', background: '#8b0000', color: 'white', position: 'relative' }}>
-          <h1 style={{ margin: 0 }}>深圳实验学校汉韵社</h1>
+          <h1 style={{ margin: 0 }}>{t('appName')}</h1>
           <div style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <button 
+                onClick={toggleLanguage}
+                style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
+             >
+               {language === 'zh' ? 'EN' : '中文'}
+             </button>
             {user ? (
               <>
-                <span style={{ fontSize: '0.9rem' }}>{user.n.replace("🥒", `用户_${user.id}`)} ({user.id})</span>
+                <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{user.n.replace("🥒", `_${user.id}`)} ({user.id})</span>
                  {isAdmin && (
                     <button 
                       onClick={() => setIsAdminMode(!isAdminMode)}
@@ -77,14 +85,14 @@ function App() {
                         fontWeight: isAdminMode ? 'bold' : 'normal'
                       }}
                     >
-                      {isAdminMode ? 'Exit Admin' : 'Manage'}
+                      {isAdminMode ? t('exitAdmin') : t('manage')}
                     </button>
                  )}
                 <button 
                   onClick={handleLogout}
                   style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
                 >
-                  Logout
+                  {t('logout')}
                 </button>
               </>
             ) : (
@@ -92,7 +100,7 @@ function App() {
                   onClick={() => setShowLogin(true)}
                   style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
                 >
-                  Login
+                  {t('login')}
                 </button>
             )}
           </div>
@@ -100,7 +108,7 @@ function App() {
 
       {isAdminMode && (
           <div style={{ backgroundColor: '#ffcccc', color: '#8b0000', textAlign: 'center', padding: '5px', fontSize: '0.9rem' }}>
-              🔧 Admin Mode Active: Click "Edit" on components to modify content.
+              {t('adminModeActive')}
           </div>
       )}
 

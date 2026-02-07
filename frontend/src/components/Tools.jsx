@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import EditModal from './EditModal';
+import { useTranslation } from '../LanguageContext';
 
 const Tools = ({ data, isAdminMode, onSave }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
 
   const list = data || [
-    { "title": "Loading...", "url": "#" }
+    { "title": t('loading'), "url": "#" }
   ];
 
   return (
@@ -15,7 +17,7 @@ const Tools = ({ data, isAdminMode, onSave }) => {
             onClick={() => setIsEditing(true)}
             style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.8rem' }}
           >
-            Edit
+            {t('edit')}
           </button>
       )}
       <EditModal 
@@ -26,9 +28,9 @@ const Tools = ({ data, isAdminMode, onSave }) => {
             setIsEditing(false);
         }} 
         data={list} 
-        title="Tools" 
+        title={t('tools')}
       />
-      <div className="section-title">实用工具</div>
+      <div className="section-title">{t('tools')}</div>
       <ul className="tool-list">
         {list.map((item, index) => (
             <li key={index}>

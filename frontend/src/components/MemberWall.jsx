@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import EditModal from './EditModal';
+import { useTranslation } from '../LanguageContext';
 
 const MemberWall = ({ isAdminMode }) => {
+  const { t } = useTranslation();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -34,7 +36,7 @@ const MemberWall = ({ isAdminMode }) => {
   };
 
 
-  if (loading) return <div>Loading Members...</div>;
+  if (loading) return <div>{t('loading')}</div>;
 
   const displayMembers = members.slice(0, MAX_DISPLAY);
   const hasMore = members.length > MAX_DISPLAY;
@@ -46,7 +48,7 @@ const MemberWall = ({ isAdminMode }) => {
             onClick={() => setIsEditing(true)}
             style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.8rem' }}
           >
-            Edit
+            {t('edit')}
           </button>
       )}
       <EditModal 
@@ -54,9 +56,9 @@ const MemberWall = ({ isAdminMode }) => {
         onClose={() => setIsEditing(false)} 
         onSave={handleSave} 
         data={members} 
-        title="Members" 
+        title={t('memberWall')}
       />
-      <div className="section-title">社员墙</div>
+      <div className="section-title">{t('memberWall')}</div>
       <div className="member-grid">
         {displayMembers.map(member => (
           <div key={member.id} className="member-item">
@@ -71,7 +73,7 @@ const MemberWall = ({ isAdminMode }) => {
         {hasMore && (
            <div className="member-item">
              <div className="member-more">...</div>
-             <div className="member-name">更多</div>
+             <div className="member-name">{t('more')}</div>
            </div>
         )}
       </div>
