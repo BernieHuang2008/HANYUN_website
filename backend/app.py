@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 import json
 import random
 import os
-import requests
 import MercurySQL as msql
 import libsql
 
@@ -177,33 +176,6 @@ def update_content():
     data = request.json
     save_content("content", data)
     return jsonify({"success": True})
-
-
-# API: Daily Content (Quote or Image)
-@app.route("/api/daily", methods=["GET"])
-def get_daily():
-    q = load_content("quote")  # Contains g (general) and s (special)
-
-    # Check Special Triggers
-    special_list = q.get("s", [])
-    for item in special_list:
-        if isTrigger(item.get("tr", {})):
-            content = item.get("c", {})
-            return jsonify(
-                {
-                    "t": content.get("t"),  # type
-                    "c": content.get("c"),  # content
-                    "d": content.get("d"),  # description
-                }
-            )
-
-    # General Random Quote
-    general_quotes = q.get("g", [])
-    if general_quotes:
-        quote = random.choice(general_quotes)
-        return jsonify({"t": "quote", "c": quote, "d": "每日一句"})
-
-    return jsonify({"t": "quote", "c": "Stay inspired!", "d": "Daily Quote"})
 
 
 # API: Suggestion Box
