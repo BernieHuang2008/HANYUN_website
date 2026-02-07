@@ -13,14 +13,16 @@ if os.path.exists("backend/.env.local"):
     load_dotenv("backend/.env.local")
 url = os.getenv("TURSO_DATABASE_URL")
 auth_token = os.getenv("TURSO_AUTH_TOKEN")
-raise Exception(f"url: {url}, auth_token: {auth_token}")
 
 # init msql
 class TursoDriver(msql.drivers.sqlite):
     @staticmethod
     def connect(db_name, url, auth_token):
+        print(f"Connecting to Turso DB: {db_name} with URL: {url}")
         conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
+        print("Connected to Turso DB successfully.")
         conn.sync()
+        print("Synced")
         return conn
 
 
