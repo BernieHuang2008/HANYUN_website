@@ -23,19 +23,19 @@ const DailyCalendar = () => {
         
         {dailyData ? (
             <div className="daily-content">
-                {dailyData.type === 'quote' ? (
+                {dailyData.t === 'quote' ? (
                     <blockquote style={{ fontSize: '1.2em', fontStyle: 'italic' }}>
-                        "{dailyData.content}"
+                        "{dailyData.c}"
                     </blockquote>
                 ) : (
                     <img 
-                        src={dailyData.content} 
+                        src={dailyData.c} 
                         alt="Daily" 
                         className="daily-content-img"
                     />
                 )}
                 <p style={{ fontSize: '0.9em', color: '#666', marginTop: '10px' }}>
-                    {dailyData.description}
+                    {dailyData.d}
                 </p>
             </div>
         ) : (

@@ -8,9 +8,9 @@ const ClubBanner = ({ data, isAdminMode, onSave }) => {
 
   const banner = data || {
       // Fallback
-      "imageUrl": "https://picsum.photos/800/400?grayscale",
-      "title": t('loading'),
-      "subtitle": ""
+      "img": "https://picsum.photos/800/400?grayscale",
+      "t": t('loading'),
+      "st": ""
   };
 
   return (
@@ -34,13 +34,13 @@ const ClubBanner = ({ data, isAdminMode, onSave }) => {
         title={t('clubBanner')}
       />
       <img 
-        src={banner.imageUrl} 
+        src={banner.img} 
         alt="Club Event" 
         className="banner-img"
       />
       <div className="overlay-text">
-        <h2>{banner.title}</h2>
-        <p>{banner.subtitle}</p>
+        <h2>{banner.t}</h2>
+        <p>{banner.st}</p>
       </div>
     </div>
   );

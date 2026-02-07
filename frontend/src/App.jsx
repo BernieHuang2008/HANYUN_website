@@ -56,7 +56,7 @@ function App() {
     return <Login onLogin={handleLogin} onCancel={() => setShowLogin(false)} />;
   }
 
-  const isAdmin = user && (user.role === 'admin' || user.r === 'admin');
+  const isAdmin = user && (user.r === 'admin');
 
   return (
     <div className="app-container">
@@ -117,23 +117,23 @@ function App() {
         <div className="left-column">
           <MemberWall isAdminMode={isAdminMode} />
           <Resources 
-            data={content?.resources} 
+            data={content?.res} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('resources', d)} 
+            onSave={(d) => updateContent('res', d)} 
           />
           <Tools 
-            data={content?.tools} 
+            data={content?.tls} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('tools', d)} 
+            onSave={(d) => updateContent('tls', d)} 
           />
         </div>
 
         {/* Right Column */}
         <div className="right-column">
           <ClubBanner 
-            data={content?.banner} 
+            data={content?.bn} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('banner', d)} 
+            onSave={(d) => updateContent('bn', d)} 
           />
           <DailyCalendar />
         </div>

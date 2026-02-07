@@ -39,6 +39,15 @@ export const translations = {
     invalidJson: "Invalid JSON",
     clubBanner: "Club Banner",
     // Data Keys
+    key_t: "Title",      // t -> title
+    key_l: "Link URL",   // l -> link/url
+    key_img: "Image URL",// img -> image
+    key_st: "Subtitle",  // st -> subtitle
+    key_n: "Name",       // n -> name
+    key_d: "Detail",     // d -> detail
+    key_a: "Avatar URL", // a -> avatar
+    key_r: "Role",       // r -> role
+    
     key_title: "Title",
     key_url: "Link URL",
     key_imageUrl: "Image URL",
@@ -87,6 +96,15 @@ export const translations = {
     invalidJson: "格式有误",
     clubBanner: "社团题图",
     // Data Keys
+    key_t: "标题",
+    key_l: "链接",
+    key_img: "图片链接",
+    key_st: "副标题",
+    key_n: "姓名",
+    key_d: "详情",
+    key_a: "头像链接",
+    key_r: "身份",
+
     key_title: "标题",
     key_url: "链接",
     key_imageUrl: "图片链接",

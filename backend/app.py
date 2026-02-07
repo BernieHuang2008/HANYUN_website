@@ -13,8 +13,9 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 def isTrigger(trigger):
-    if trigger["type"] == "date":
-        return trigger["date"] == datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+    # s: trigger, t: type, d: date
+    if trigger["t"] == "date":
+        return trigger["d"] == datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
 
 # Helper to load data from Edge Config or local file
 def load_data(key):
@@ -39,9 +40,11 @@ def load_data(key):
     try:
         with open('edgeconfig.json', 'r', encoding='utf-8') as f:
             all_data = json.load(f)
-            return all_data.get(key, [] if key == 'members' else {}) # Default based on expected type if possible, or just checking later
+            # KEY MAPPINGS (for local dev fallback, assuming JSON has short keys)
+            # u: users, c: content, q: quotes, m: members
+            return all_data.get(key, [] if key == 'm' else {}) 
     except FileNotFoundError:
-        return [] if key == 'members' else {}
+        return [] if key == 'm' else {}
 
 # Helper to save data to Edge Config (requires VERCEL_API_TOKEN) and local file
 def save_data(key, data):
@@ -104,108 +107,106 @@ def login():
     if not student_no:
         return jsonify({"success": False, "message": "Please provide a Student No"}), 400
 
-    # TODO: Implement checking logic of valid student No
-    # If the student number is invalid according to school rules, return error here.
-    # if not is_valid_student(student_no):
-    #    return jsonify({"success": False, "message": "Invalid Student No"}), 400
-
-    # Load users
-    users = load_data('users')
+    # Load users (short key 'u')
+    users = load_data('u')
     
-    # Find user
-    user = next((u for uid, u in users.items() if uid == student_no), None)
+    # Find user by student number (key in users dict)
+    user_data = users.get(student_no)
     
-    if not user:
+    if not user_data:
         # Create new user if not exists
-        user = {
-            "n": "🥒",  # user name
-            "r": "v" # role Default role: admin, member, visitor
+        user_data = {
+            "n": "🥒",  # user name default
+            "r": "v"    # role Default: visitor
         }
-        users[student_no] = user
-        save_data('users', users)
+        users[student_no] = user_data
+        save_data('u', users)
 
-    # add information to user object
-    user['id'] = student_no
+    # Return user object with short keys directly
+    user = {
+        "id": student_no,
+        "n": user_data.get("n"),
+        "r": user_data.get("r")
+    }
     
     return jsonify({"success": True, "user": user})
 
 # API: Get all members
 @app.route('/api/members', methods=['GET'])
 def get_members():
-    members = load_data('members')
-    return jsonify(members)
+    # Load 'm' (list of {n, a, d, id})
+    short_members = load_data('m')
+    if not isinstance(short_members, list):
+        short_members = []
+    
+    # Assign ID if missing for display
+    for m in short_members:
+        if "id" not in m:
+            m["id"] = str(random.randint(10000, 99999))
+            
+    return jsonify(short_members)
 
 # API: Update members
 @app.route('/api/members', methods=['POST'])
 def update_members():
-    data = request.json
-    save_data('members', data)
+    data = request.json # Data uses short keys directly
+    save_data('m', data)
     return jsonify({"success": True})
 
 # API: Get Content
 @app.route('/api/content', methods=['GET'])
 def get_content():
-    content = load_data('content')
-    if not content: # Default content if file missing
-        content = {
-            "resources": [],
-            "tools": [],
-            "banner": {
-                "imageUrl": "https://picsum.photos/800/400?grayscale",
-                "title": "Welcome",
-                "subtitle": "Club"
+    c = load_data('c')
+    if not c:
+        return jsonify({
+            "res": [],
+            "tls": [],
+            "bn": {
+                "img": "https://picsum.photos/800/400?grayscale",
+                "t": "Welcome",
+                "st": "Club"
             }
-        }
-    return jsonify(content)
+        })
+    return jsonify(c)
 
 # API: Update Content
 @app.route('/api/content', methods=['POST'])
 def update_content():
     data = request.json
-    save_data('content', data)
+    save_data('c', data)
     return jsonify({"success": True})
 
 # API: Daily Content (Quote or Image)
 @app.route('/api/daily', methods=['GET'])
 def get_daily():
-    # Randomly decide to return a quote or an image
-    # In a real app, this might come from a DB or scheduled task
-    is_image = random.choice([True, False])
+    q = load_data('q') # Contains g (general) and s (special)
     
-    if is_image:
-        return jsonify({
-            "type": "image",
-            "content": "https://picsum.photos/400/300", # Placeholder image
-            "description": "今日社团摄影精选"
-        })
-    else:
-        quotes_data = load_data('quotes')
-        if not quotes_data:
-             return jsonify({
-                "type": "quote",
-                "content": "No quotes available.",
-                "description": "System"
+    # Check Special Triggers
+    special_list = q.get("s", [])
+    for item in special_list:
+        if isTrigger(item.get("tr", {})):
+            content = item.get("c", {})
+            return jsonify({
+                "t": content.get("t"), # type
+                "c": content.get("c"), # content
+                "d": content.get("d")  # description
             })
 
-        quotes = quotes_data.get("general", [])
-
-        if "special" in quotes_data:
-            for item in quotes_data["special"]:
-                 if isTrigger(item["trigger"]):
-                    return jsonify(item["content"])
-
-        if not quotes:
-             return jsonify({
-                "type": "quote",
-                "content": "Stay inspired!",
-                "description": "Daily Quote"
-             })
-
+    # General Random Quote
+    general_quotes = q.get("g", [])
+    if general_quotes:
+        quote = random.choice(general_quotes)
         return jsonify({
-            "type": "quote",
-            "content": random.choice(quotes),
-            "description": "每日一句"
+            "t": "quote",
+            "c": quote,
+            "d": "每日一句"
         })
+    
+    return jsonify({
+        "t": "quote",
+        "c": "Stay inspired!",
+        "d": "Daily Quote"
+    })
 
 # API: Suggestion Box
 @app.route('/api/suggestion', methods=['POST'])

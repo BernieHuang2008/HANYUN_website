@@ -62,11 +62,11 @@ const MemberWall = ({ isAdminMode }) => {
       <div className="member-grid">
         {displayMembers.map(member => (
           <div key={member.id} className="member-item">
-            <img src={member.avatar} alt={member.name} className="member-avatar" />
-            <div className="member-name">{member.name}</div>
+            <img src={member.a} alt={member.n} className="member-avatar" />
+            <div className="member-name">{member.n}</div>
             <div className="member-tooltip">
-              <strong>{member.name}</strong><br/>
-              {member.detail}
+              <strong>{member.n}</strong><br/>
+              {member.d}
             </div>
           </div>
         ))}

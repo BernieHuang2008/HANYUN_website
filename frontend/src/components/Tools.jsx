@@ -7,7 +7,7 @@ const Tools = ({ data, isAdminMode, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
 
   const list = data || [
-    { "title": t('loading'), "url": "#" }
+    { "t": t('loading'), "l": "#" }
   ];
 
   return (
@@ -34,7 +34,7 @@ const Tools = ({ data, isAdminMode, onSave }) => {
       <ul className="tool-list">
         {list.map((item, index) => (
             <li key={index}>
-                <a href={item.url} className="tool-link">{item.title}</a>
+                <a href={item.l} className="tool-link">{item.t}</a>
             </li>
         ))}
       </ul>
