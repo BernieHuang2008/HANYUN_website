@@ -52,20 +52,12 @@ def load_default_content():
                 {"l": "/ttt", "t": "ttt"},
             ],
         },
-        "quote": {
-            "g": [
-                "汉服之美，在于传承。",
-                "岂曰无衣，与子同袍。",
-                "云想衣裳花想容，春风拂槛露华浓。",
-                "着我汉家衣裳，兴我礼仪之邦。",
-            ],
-            "s": [
-                {
-                    "tr": {"t": "date", "d": "2026-02-05"},
-                    "c": {"t": "quote", "c": "特殊！", "d": "这是一个特殊的日子！"},
-                }
-            ],
-        },
+        "quote": [
+            {
+                "tr": {"t": "date", "d": "2026-02-05"},
+                "c": {"t": "quote", "c": "特殊！", "d": "这是一个特殊的日子！"},
+            }
+        ],
         "members": [],
     }
 
@@ -74,6 +66,7 @@ def load_default_content():
         if not record:
             # print(json.dumps(value))
             tb_content.insert(id=key, json=json.dumps(value))
+
 
 # load_default_content()
 
