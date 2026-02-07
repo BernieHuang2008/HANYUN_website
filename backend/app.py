@@ -23,10 +23,11 @@ class TursoDriver(msql.drivers.sqlite):
         return conn
 
 
-msql.set_driver(msql.drivers.sqlite)
-db = msql.DataBase("hanyun.db")
 # msql.set_driver(TursoDriver)
 # db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
+conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
+conn.sync()
+raise Exception("gua")
 tb_user = db["user"]
 tb_content = db["content"]
 tb_feedback = db["feedback"]
