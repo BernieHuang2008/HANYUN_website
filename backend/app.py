@@ -18,11 +18,9 @@ auth_token = os.getenv("TURSO_AUTH_TOKEN")
 class TursoDriver(msql.drivers.sqlite):
     @staticmethod
     def connect(db_name, url, auth_token):
-        print(f"Connecting to Turso DB: {db_name} with URL: {url}")
+        raise Exception("HAHAHA")
         conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
-        print("Connected to Turso DB successfully.")
         conn.sync()
-        print("Synced")
         return conn
 
 
