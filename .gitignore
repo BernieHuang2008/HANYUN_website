@@ -151,3 +151,5 @@ local_settings.py
 
 # Backup files
 *.bak
+.vercel
+.env*.local
