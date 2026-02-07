@@ -56,7 +56,7 @@ function App() {
     return <Login onLogin={handleLogin} onCancel={() => setShowLogin(false)} />;
   }
 
-  const isAdmin = user && (user.r === 'admin');
+  const isAdmin = user && (user.role === 'admin');
 
   return (
     <div className="app-container">
@@ -71,7 +71,7 @@ function App() {
              </button>
             {user ? (
               <>
-                <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{user.n.replace("🥒", `_${user.id}`)} ({user.id})</span>
+                <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{user.username.replace("🥒", `_${user.id}`)} ({user.id})</span>
                  {isAdmin && (
                     <button 
                       onClick={() => setIsAdminMode(!isAdminMode)}
