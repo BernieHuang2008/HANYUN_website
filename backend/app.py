@@ -9,9 +9,9 @@ import MercurySQL as msql
 import libsql
 
 # load .env.local for dev
-load_dotenv("backend/.env.local")
-url = os.getenv("TURSO_DATABASE_URL")
-auth_token = os.getenv("TURSO_AUTH_TOKEN")
+# load_dotenv("backend/.env.local")
+# url = os.getenv("TURSO_DATABASE_URL")
+# auth_token = os.getenv("TURSO_AUTH_TOKEN")
 
 
 # init msql
@@ -51,12 +51,6 @@ def load_default_content():
                 {"l": "/ttt", "t": "ttt"},
             ],
         },
-        "quote": [
-            {
-                "tr": {"t": "date", "d": "2026-02-05"},
-                "c": {"t": "quote", "c": "特殊！", "d": "这是一个特殊的日子！"},
-            }
-        ],
         "members": [],
     }
 
