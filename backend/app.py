@@ -18,14 +18,15 @@ auth_token = os.getenv("TURSO_AUTH_TOKEN")
 class TursoDriver(msql.drivers.sqlite):
     @staticmethod
     def connect(db_name, url, auth_token):
-        raise Exception("hahahaha!")
         conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
         conn.sync()
         return conn
 
 
-msql.set_driver(TursoDriver)
-db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
+msql.set_driver(msql.drivers.sqlite)
+db = msql.DataBase("hanyun.db")
+# msql.set_driver(TursoDriver)
+# db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
 tb_user = db["user"]
 tb_content = db["content"]
 tb_feedback = db["feedback"]
