@@ -6,216 +6,223 @@ import json
 import random
 import os
 import requests
+import MercurySQL as msql
+import libsql
 
-load_dotenv(".env.local") # Load environment variables from .env file
+# load .env.local for dev
+load_dotenv("backend/.env.local")
+url = os.getenv("TURSO_DATABASE_URL")
+auth_token = os.getenv("TURSO_AUTH_TOKEN")
+
+
+# init msql
+class TursoDriver(msql.drivers.sqlite):
+    @staticmethod
+    def connect(db_name, url, auth_token):
+        conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
+        conn.sync()
+        return conn
+
+
+msql.set_driver(TursoDriver)
+db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
+tb_user = db["user"]
+tb_content = db["content"]
+tb_feedback = db["feedback"]
+tb_user.struct({"id": str, "username": str, "role": str}, primaryKey="id")
+tb_content.struct({"id": str, "json": str}, primaryKey="id")
+tb_feedback.struct(
+    {"id": int, "uid": int, "suggestion": str}, primaryKey="id", autoIncrement=True
+)
+
+
+def load_default_content():
+    defaultc = {
+        "content": {
+            "bn": {
+                "img": "https://picsum.photos/800/400?grayscale",
+                "st": "期待与你在深实相遇",
+                "t": "汉韵社秋季招新火热进行中",
+            },
+            "res": [{"l": "#", "t": "汉服形制发展史 (PDF)"}],
+            "tls": [
+                {"l": "/tools/calendar", "t": "活动日历查询"},
+                {"l": "/tools/rent", "t": "服装借用系统"},
+                {"l": "/tools/checkin", "t": "社员签到入口"},
+                {"l": "/ttt", "t": "ttt"},
+            ],
+        },
+        "quote": {
+            "g": [
+                "汉服之美，在于传承。",
+                "岂曰无衣，与子同袍。",
+                "云想衣裳花想容，春风拂槛露华浓。",
+                "着我汉家衣裳，兴我礼仪之邦。",
+            ],
+            "s": [
+                {
+                    "tr": {"t": "date", "d": "2026-02-05"},
+                    "c": {"t": "quote", "c": "特殊！", "d": "这是一个特殊的日子！"},
+                }
+            ],
+        },
+        "members": [],
+    }
+
+    for key, value in defaultc.items():
+        record = tb_content.select((tb_content["id"] == key))
+        if not record:
+            # print(json.dumps(value))
+            tb_content.insert(id=key, json=json.dumps(value))
+
+# load_default_content()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+
 def isTrigger(trigger):
     # s: trigger, t: type, d: date
     if trigger["t"] == "date":
-        return trigger["d"] == datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+        return trigger["d"] == datetime.now(timezone(timedelta(hours=8))).strftime(
+            "%Y-%m-%d"
+        )
+    else:
+        return False
 
-# Helper to load data from Edge Config or local file
-def load_data(key):
-    edge_config = os.environ.get('EDGE_CONFIG')
-    if edge_config:
-        try:
-             # EDGE_CONFIG is typically https://edge-config.vercel.com/<id>?token=<token>
-             parts = edge_config.split('?')
-             base_url = parts[0]
-             query = parts[1] if len(parts) > 1 else ""
-             
-             # Fetch item from Edge Config
-             response = requests.get(f"{base_url}/item/{key}?{query}")
-             if response.ok:
-                 return response.json()
-             else:
-                 print(f"Edge Config Error for {key}: {response.text}")
-        except Exception as e:
-            print(f"Failed to load {key} from Edge Config: {e}")
 
-    # Fallback to local 'edgeconfig.json' simulation
-    try:
-        with open('edgeconfig.json', 'r', encoding='utf-8') as f:
-            all_data = json.load(f)
-            # KEY MAPPINGS (for local dev fallback, assuming JSON has short keys)
-            # u: users, c: content, q: quotes, m: members
-            return all_data.get(key, [] if key == 'm' else {}) 
-    except FileNotFoundError:
-        return [] if key == 'm' else {}
+def load_content(content_id):
+    record = tb_content.select((tb_content["id"] == content_id))
+    if record:
+        return json.loads(record[0]["json"])
+    return {}
 
-# Helper to save data to Edge Config (requires VERCEL_API_TOKEN) and local file
-def save_data(key, data):
-    # 1. Update Edge Config if configured
-    edge_config = os.environ.get('EDGE_CONFIG')
-    vercel_token = os.environ.get('VERCEL_API_TOKEN')
-    
-    if edge_config and vercel_token:
-        try:
-            # Extract Edge Config ID from connection string
-            # Format: https://edge-config.vercel.com/<id>?token=<token>
-            if 'edge-config.vercel.com/' in edge_config:
-                parts = edge_config.split('edge-config.vercel.com/')[1].split('?')
-                ec_id = parts[0]
-                
-                url = f"https://api.vercel.com/v1/edge-config/{ec_id}/items"
-                headers = {
-                    "Authorization": f"Bearer {vercel_token}",
-                    "Content-Type": "application/json"
-                }
-                payload = {
-                    "items": [
-                        {
-                            "operation": "upsert",
-                            "key": key,
-                            "value": data
-                        }
-                    ]
-                }
-                resp = requests.patch(url, headers=headers, json=payload)
-                if not resp.ok:
-                    print(f"Error updating Edge Config: {resp.text}")
-        except Exception as e:
-            print(f"Exception updating Edge Config: {e}")
 
-    # 2. Update local 'edgeconfig.json' simulation (Fallback & Dev)
-    try:
-        filename = 'edgeconfig.json'
-        all_data = {}
-        if os.path.exists(filename):
-            with open(filename, 'r', encoding='utf-8') as f:
-                try:
-                    all_data = json.load(f)
-                except json.JSONDecodeError:
-                    all_data = {}
-        
-        all_data[key] = data
-        
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(all_data, f, ensure_ascii=False, indent=4)
-    except Exception as e:
-        print(f"Error saving local file {key}: {e}")
+def save_content(content_id, content_data):
+    json_data = json.dumps(content_data)
+    tb_content.insert(__auto=True, id=content_id, json=json_data)
+
 
 # API: Login
-@app.route('/api/login', methods=['POST'])
+@app.route("/api/login", methods=["POST"])
 def login():
     data = request.json
-    student_no = data.get('studentNo')
-    
-    if not student_no:
-        return jsonify({"success": False, "message": "Please provide a Student No"}), 400
+    student_no = str(data.get("studentNo"))
 
-    # Load users (short key 'u')
-    users = load_data('u')
-    
-    # Find user by student number (key in users dict)
-    user_data = users.get(student_no)
-    
-    if not user_data:
+    if not student_no:
+        return (
+            jsonify({"success": False, "message": "Please provide a Student No"}),
+            400,
+        )
+
+    user_data = tb_user.select((tb_user["id"] == student_no))
+
+    if len(user_data):
+        user_data = {
+            "id": student_no,
+            "username": user_data[0]["username"],
+            "role": user_data[0]["role"],  # role Default: visitor
+        }
+    else:
         # Create new user if not exists
         user_data = {
-            "n": "🥒",  # user name default
-            "r": "v"    # role Default: visitor
+            "id": student_no,
+            "username": "🥒",
+            "role": "visitor",  # role Default: visitor
         }
-        users[student_no] = user_data
-        save_data('u', users)
+        tb_user.insert(**user_data)
 
-    # Return user object with short keys directly
-    user = {
-        "id": student_no,
-        "n": user_data.get("n"),
-        "r": user_data.get("r")
-    }
-    
-    return jsonify({"success": True, "user": user})
+    return jsonify({"success": True, "user": user_data})
+
 
 # API: Get all members
-@app.route('/api/members', methods=['GET'])
+@app.route("/api/members", methods=["GET"])
 def get_members():
     # Load 'm' (list of {n, a, d, id})
-    short_members = load_data('m')
+    short_members = load_content("members")
     if not isinstance(short_members, list):
         short_members = []
-    
+
     # Assign ID if missing for display
     for m in short_members:
         if "id" not in m:
             m["id"] = str(random.randint(10000, 99999))
-            
+
     return jsonify(short_members)
 
+
 # API: Update members
-@app.route('/api/members', methods=['POST'])
+@app.route("/api/members", methods=["POST"])
 def update_members():
-    data = request.json # Data uses short keys directly
-    save_data('m', data)
+    data = request.json  # Data uses short keys directly
+    save_content("members", data)
     return jsonify({"success": True})
+
 
 # API: Get Content
-@app.route('/api/content', methods=['GET'])
+@app.route("/api/content", methods=["GET"])
 def get_content():
-    c = load_data('c')
+    c = load_content("content")
     if not c:
-        return jsonify({
-            "res": [],
-            "tls": [],
-            "bn": {
-                "img": "https://picsum.photos/800/400?grayscale",
-                "t": "Welcome",
-                "st": "Club"
+        return jsonify(
+            {
+                "res": [],
+                "tls": [],
+                "bn": {
+                    "img": "https://picsum.photos/800/400?grayscale",
+                    "t": "Welcome",
+                    "st": "Club",
+                },
             }
-        })
+        )
     return jsonify(c)
 
+
 # API: Update Content
-@app.route('/api/content', methods=['POST'])
+@app.route("/api/content", methods=["POST"])
 def update_content():
     data = request.json
-    save_data('c', data)
+    save_content("content", data)
     return jsonify({"success": True})
 
+
 # API: Daily Content (Quote or Image)
-@app.route('/api/daily', methods=['GET'])
+@app.route("/api/daily", methods=["GET"])
 def get_daily():
-    q = load_data('q') # Contains g (general) and s (special)
-    
+    q = load_content("quote")  # Contains g (general) and s (special)
+
     # Check Special Triggers
     special_list = q.get("s", [])
     for item in special_list:
         if isTrigger(item.get("tr", {})):
             content = item.get("c", {})
-            return jsonify({
-                "t": content.get("t"), # type
-                "c": content.get("c"), # content
-                "d": content.get("d")  # description
-            })
+            return jsonify(
+                {
+                    "t": content.get("t"),  # type
+                    "c": content.get("c"),  # content
+                    "d": content.get("d"),  # description
+                }
+            )
 
     # General Random Quote
     general_quotes = q.get("g", [])
     if general_quotes:
         quote = random.choice(general_quotes)
-        return jsonify({
-            "t": "quote",
-            "c": quote,
-            "d": "每日一句"
-        })
-    
-    return jsonify({
-        "t": "quote",
-        "c": "Stay inspired!",
-        "d": "Daily Quote"
-    })
+        return jsonify({"t": "quote", "c": quote, "d": "每日一句"})
+
+    return jsonify({"t": "quote", "c": "Stay inspired!", "d": "Daily Quote"})
+
 
 # API: Suggestion Box
-@app.route('/api/suggestion', methods=['POST'])
+@app.route("/api/suggestion", methods=["POST"])
 def submit_suggestion():
     data = request.json
-    suggestion = data.get('suggestion')
+    suggestion = data.get("suggestion")
     # In a real app, save this to a database
     print(f"Received suggestion: {suggestion}")
+    tb_feedback.insert({"uid": 0, "suggestion": suggestion})
     return jsonify({"status": "success", "message": "感谢您的建议！"})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(debug=True, port=3000)

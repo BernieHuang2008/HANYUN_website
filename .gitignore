@@ -140,6 +140,9 @@ jspm_packages/
 *.db
 *.sqlite
 *.sqlite3
+*.db-info
+*.db-shm
+*.db-wal
 
 # Configuration files with secrets
 config.py
