@@ -67,7 +67,7 @@ def load_default_content():
             tb_content.insert(id=key, json=json.dumps(value))
 
 
-# load_default_content()
+load_default_content()
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -188,6 +188,10 @@ def submit_suggestion():
     tb_feedback.insert({"uid": 0, "suggestion": suggestion})
     return jsonify({"status": "success", "message": "感谢您的建议！"})
 
+
+@app.route("/api/hello", methods=["GET"])
+def hello():
+    return jsonify({"message": "Hello, World!"})
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)
