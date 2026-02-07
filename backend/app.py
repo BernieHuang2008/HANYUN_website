@@ -13,7 +13,7 @@ if os.path.exists("backend/.env.local"):
     load_dotenv("backend/.env.local")
 url = os.getenv("TURSO_DATABASE_URL")
 auth_token = os.getenv("TURSO_AUTH_TOKEN")
-
+raise Exception(f"url: {url}, auth_token: {auth_token}")
 
 # init msql
 class TursoDriver(msql.drivers.sqlite):
