@@ -18,16 +18,14 @@ auth_token = os.getenv("TURSO_AUTH_TOKEN")
 class TursoDriver(msql.drivers.sqlite):
     @staticmethod
     def connect(db_name, url, auth_token):
-        conn = libsql.connect(db_name, sync_url=url, auth_token=auth_token)
-        conn.sync()
+        # Connect directly to the remote URL to avoid local file writes on Vercel
+        conn = libsql.connect(url, auth_token=auth_token)
         return conn
 
 
-# msql.set_driver(TursoDriver)
-# db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
-conn = libsql.connect("hanyun.db", sync_url=url, auth_token=auth_token)
-conn.sync()
-raise Exception("gua")
+msql.set_driver(TursoDriver)
+db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
+
 tb_user = db["user"]
 tb_content = db["content"]
 tb_feedback = db["feedback"]
