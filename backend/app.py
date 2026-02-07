@@ -125,6 +125,36 @@ def get_members():
     members = load_data('members')
     return jsonify(members)
 
+# API: Update members
+@app.route('/api/members', methods=['POST'])
+def update_members():
+    data = request.json
+    save_data('members', data)
+    return jsonify({"success": True})
+
+# API: Get Content
+@app.route('/api/content', methods=['GET'])
+def get_content():
+    content = load_data('content')
+    if not content: # Default content if file missing
+        content = {
+            "resources": [],
+            "tools": [],
+            "banner": {
+                "imageUrl": "https://picsum.photos/800/400?grayscale",
+                "title": "Welcome",
+                "subtitle": "Club"
+            }
+        }
+    return jsonify(content)
+
+# API: Update Content
+@app.route('/api/content', methods=['POST'])
+def update_content():
+    data = request.json
+    save_data('content', data)
+    return jsonify({"success": True})
+
 # API: Daily Content (Quote or Image)
 @app.route('/api/daily', methods=['GET'])
 def get_daily():

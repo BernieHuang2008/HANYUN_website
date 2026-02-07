@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import EditModal from './EditModal';
 
-const MemberWall = () => {
+const MemberWall = ({ isAdminMode }) => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
   const MAX_DISPLAY = 9; // Limit visible members
 
   useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = () => {
     axios.get('/api/members')
       .then(res => {
         setMembers(res.data);
@@ -16,7 +22,17 @@ const MemberWall = () => {
         console.error("Failed to fetch members", err);
         setLoading(false);
       });
-  }, []);
+  };
+
+  const handleSave = (newMembers) => {
+      axios.post('/api/members', newMembers)
+        .then(() => {
+            setMembers(newMembers);
+            setIsEditing(false);
+        })
+        .catch(err => alert("Failed to save members: " + err));
+  };
+
 
   if (loading) return <div>Loading Members...</div>;
 
@@ -24,7 +40,22 @@ const MemberWall = () => {
   const hasMore = members.length > MAX_DISPLAY;
 
   return (
-    <div className="section-card">
+    <div className="section-card" style={{ position: 'relative' }}>
+      {isAdminMode && (
+          <button 
+            onClick={() => setIsEditing(true)}
+            style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.8rem' }}
+          >
+            Edit
+          </button>
+      )}
+      <EditModal 
+        isOpen={isEditing} 
+        onClose={() => setIsEditing(false)} 
+        onSave={handleSave} 
+        data={members} 
+        title="Members" 
+      />
       <div className="section-title">社员墙</div>
       <div className="member-grid">
         {displayMembers.map(member => (

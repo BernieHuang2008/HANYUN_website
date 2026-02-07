@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Login from './components/Login';
 import MemberWall from './components/MemberWall';
 import Resources from './components/Resources';
@@ -10,13 +11,32 @@ import Footer from './components/Footer';
 function App() {
   const [user, setUser] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [content, setContent] = useState(null);
+  const [isAdminMode, setIsAdminMode] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('hanyun_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    fetchContent();
   }, []);
+
+  const fetchContent = () => {
+    axios.get('/api/content')
+      .then(res => setContent(res.data))
+      .catch(err => console.error("Failed to fetch content", err));
+  };
+
+  const updateContent = (section, newData) => {
+    const newContent = { ...content, [section]: newData };
+    setContent(newContent);
+    axios.post('/api/content', newContent)
+      .catch(err => {
+        console.error("Failed to save content", err);
+        alert("Failed to save content.");
+      });
+  };
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -27,11 +47,14 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('hanyun_user');
+    setIsAdminMode(false);
   };
 
   if (showLogin) {
     return <Login onLogin={handleLogin} onCancel={() => setShowLogin(false)} />;
   }
+
+  const isAdmin = user && (user.role === 'admin' || user.r === 'admin');
 
   return (
     <div className="app-container">
@@ -41,6 +64,22 @@ function App() {
             {user ? (
               <>
                 <span style={{ fontSize: '0.9rem' }}>{user.n.replace("🥒", `用户_${user.id}`)} ({user.id})</span>
+                 {isAdmin && (
+                    <button 
+                      onClick={() => setIsAdminMode(!isAdminMode)}
+                      style={{ 
+                        background: isAdminMode ? 'white' : 'transparent', 
+                        color: isAdminMode ? '#8b0000' : 'white', 
+                        border: '1px solid white', 
+                        padding: '5px 10px', 
+                        cursor: 'pointer', 
+                        borderRadius: '4px',
+                        fontWeight: isAdminMode ? 'bold' : 'normal'
+                      }}
+                    >
+                      {isAdminMode ? 'Exit Admin' : 'Manage'}
+                    </button>
+                 )}
                 <button 
                   onClick={handleLogout}
                   style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
@@ -59,17 +98,35 @@ function App() {
           </div>
       </header>
 
+      {isAdminMode && (
+          <div style={{ backgroundColor: '#ffcccc', color: '#8b0000', textAlign: 'center', padding: '5px', fontSize: '0.9rem' }}>
+              🔧 Admin Mode Active: Click "Edit" on components to modify content.
+          </div>
+      )}
+
       <div className="main-content">
         {/* Left Column */}
         <div className="left-column">
-          <MemberWall />
-          <Resources />
-          <Tools />
+          <MemberWall isAdminMode={isAdminMode} />
+          <Resources 
+            data={content?.resources} 
+            isAdminMode={isAdminMode} 
+            onSave={(d) => updateContent('resources', d)} 
+          />
+          <Tools 
+            data={content?.tools} 
+            isAdminMode={isAdminMode} 
+            onSave={(d) => updateContent('tools', d)} 
+          />
         </div>
 
         {/* Right Column */}
         <div className="right-column">
-          <ClubBanner />
+          <ClubBanner 
+            data={content?.banner} 
+            isAdminMode={isAdminMode} 
+            onSave={(d) => updateContent('banner', d)} 
+          />
           <DailyCalendar />
         </div>
       </div>
