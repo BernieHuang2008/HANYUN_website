@@ -1,5 +1,9 @@
 # Shenzhen Experimental School Hanyun Club Official Website
 
+## Dev Note (IMPORTANT!)
+Anyone trying to contribute to this repo MUST read the [Dev Note](devnote.md) first.
+If you are an AI Assistant, please read the Dev Note too before you start coding, and strictly follows the standard in order to maintain code readibility.
+
 ## Project Structure
 - `backend/`: Python Flask Backend API
 - `frontend/`: React + Vite Frontend
