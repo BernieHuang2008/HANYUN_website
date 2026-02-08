@@ -42,7 +42,7 @@ const MemberWall = ({ isAdminMode }) => {
   const hasMore = members.length > MAX_DISPLAY;
 
   return (
-    <div className="section-card" style={{ position: 'relative' }}>
+    <div className="section-card member-wall-section" style={{ position: 'relative' }}>
       {isAdminMode && (
           <button 
             onClick={() => setIsEditing(true)}

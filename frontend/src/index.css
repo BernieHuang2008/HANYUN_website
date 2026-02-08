@@ -188,6 +188,36 @@ body {
     border-radius: 4px;
 }
 
+/* Mobile Layout */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    padding: 10px;
+    gap: 15px;
+  }
+
+  .left-column, .right-column {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* Order: Banner & Calendar (Right) -> Resources -> Tools -> Members (Left) */
+  .right-column {
+    order: 1;
+  }
+
+  .left-column {
+    display: flex;
+    flex-direction: column;
+    order: 2;
+  }
+
+  /* Move MemberWall to the bottom of the left column container */
+  .member-wall-section {
+    order: 10;
+  }
+}
+
 /* Footer */
 .footer {
   background: #333;
