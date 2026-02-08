@@ -29,7 +29,7 @@ db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
 tb_user = db["user"]
 tb_content = db["content"]
 tb_feedback = db["feedback"]
-tb_user.struct({"id": str, "username": str, "role": str}, primaryKey="id")
+tb_user.struct({"id": str, "username": str, "role": str, "pwd": str}, primaryKey="id")
 tb_content.struct({"id": str, "json": str}, primaryKey="id")
 tb_feedback.struct(
     {"id": int, "uid": int, "suggestion": str}, primaryKey="id", autoIncrement=True
@@ -55,7 +55,7 @@ def load_default_content():
         "members": [
             {
                 "name": "张三",
-                "avatar": "社长",
+                "avatar": "url",
                 "detail": "负责整体社团运营与管理。",
             }
         ],
@@ -101,31 +101,68 @@ def save_content(content_id, content_data):
 def login():
     data = request.json
     student_no = str(data.get("studentNo"))
+    password = str(data.get("password"))
 
-    if not student_no:
+    if not student_no or not password:
         return (
-            jsonify({"success": False, "message": "Please provide a Student No"}),
+            jsonify({"success": False, "message": "Please provide Student No and Password"}),
             400,
         )
 
     user_data = tb_user.select((tb_user["id"] == student_no))
 
     if len(user_data):
-        user_data = {
-            "id": student_no,
-            "username": user_data[0]["username"],
-            "role": user_data[0]["role"],  # role Default: visitor
-        }
+        # User exists, check password
+        user = user_data[0]
+        if user.get("pwd") == password:
+            return jsonify({
+                "success": True, 
+                "user": {
+                    "id": user["id"],
+                    "username": user["username"],
+                    "role": user["role"]
+                }
+            })
+        else:
+             return (
+                jsonify({"success": False, "message": "Invalid credentials"}),
+                401,
+            )
     else:
         # Create new user if not exists
-        user_data = {
+        new_user = {
             "id": student_no,
             "username": "🥒",
             "role": "visitor",  # role Default: visitor
+            "pwd": password
         }
-        tb_user.insert(**user_data)
+        tb_user.insert(**new_user)
+        return jsonify({
+            "success": True, 
+            "user": {
+                "id": new_user["id"],
+                "username": new_user["username"],
+                "role": new_user["role"]
+            }
+        })
 
-    return jsonify({"success": True, "user": user_data})
+        
+def check_is_admin():
+    uid = request.cookies.get('hanyun_uid')
+    token = request.cookies.get('hanyun_token')
+    if not uid or not token:
+        return False
+    
+    users = tb_user.select((tb_user['id'] == uid))
+    if not users:
+        return False
+    
+    user = users[0]
+    # Check password hash (token) and role
+    if user.get('pwd') == token and user.get('role') == 'admin':
+        return True
+    
+    return False
 
 
 # API: Get all members
@@ -147,6 +184,9 @@ def get_members():
 # API: Update members
 @app.route("/api/members", methods=["POST"])
 def update_members():
+    if not check_is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
     data = request.json  # Data uses short keys directly
     save_content("members", data)
     return jsonify({"success": True})
@@ -157,23 +197,16 @@ def update_members():
 def get_content():
     c = load_content("content")
     if not c:
-        return jsonify(
-            {
-                "res": [],
-                "tls": [],
-                "bn": {
-                    "img": "https://picsum.photos/800/400?grayscale",
-                    "t": "Welcome",
-                    "st": "Club",
-                },
-            }
-        )
+        return jsonify({"success": False, "message": "Content not found"}), 500
     return jsonify(c)
 
 
 # API: Update Content
 @app.route("/api/content", methods=["POST"])
 def update_content():
+    if not check_is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
     data = request.json
     save_content("content", data)
     return jsonify({"success": True})
@@ -186,13 +219,9 @@ def submit_suggestion():
     suggestion = data.get("suggestion")
     # In a real app, save this to a database
     print(f"Received suggestion: {suggestion}")
-    tb_feedback.insert({"uid": 0, "suggestion": suggestion})
+    tb_feedback.insert({"uid": request.cookies.get('hanyun_uid'), "suggestion": suggestion})
     return jsonify({"status": "success", "message": "感谢您的建议！"})
 
-
-@app.route("/api/hello", methods=["GET"])
-def hello():
-    return jsonify({"message": "Hello, World!"})
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)

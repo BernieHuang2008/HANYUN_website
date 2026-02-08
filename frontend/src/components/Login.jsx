@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import md5 from 'js-md5';
 import { useTranslation } from '../LanguageContext';
 
 const Login = ({ onLogin, onCancel }) => {
   const { t } = useTranslation();
   const [studentNo, setStudentNo] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -14,8 +17,18 @@ const Login = ({ onLogin, onCancel }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/login', { studentNo });
+      const passwordHash = md5(password);
+      const response = await axios.post('/api/login', { 
+        studentNo, 
+        password: passwordHash 
+      });
+
       if (response.data.success) {
+        // Set cookies
+        const maxAge = rememberMe ? 31536000 : 86400; // 1 year vs 24 hours
+        document.cookie = `hanyun_uid=${studentNo}; path=/; max-age=${maxAge}`;
+        document.cookie = `hanyun_token=${passwordHash}; path=/; max-age=${maxAge}`;
+        
         onLogin(response.data.user);
       } else {
         setError(response.data.message || t('loginError'));
@@ -45,6 +58,28 @@ const Login = ({ onLogin, onCancel }) => {
               required
             />
           </div>
+          <div style={styles.inputGroup}>
+            <label htmlFor="password" style={styles.label}>{t('password')}</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              placeholder={t('enterPassword')}
+              required
+            />
+          </div>
+          <div style={styles.checkboxGroup}>
+              <input 
+                type="checkbox" 
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <label htmlFor="rememberMe">{t('rememberMe')}</label>
+          </div>
+
           {error && <div style={styles.error}>{error}</div>}
           <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
               <button type="button" onClick={onCancel} style={{ ...styles.button, background: '#ccc', flex: 1 }} disabled={loading}>
@@ -62,19 +97,23 @@ const Login = ({ onLogin, onCancel }) => {
 
 const styles = {
   container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
     height: '100vh',
-    backgroundColor: '#f5f5f5',
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000
   },
   card: {
     background: 'white',
     padding: '2rem',
     borderRadius: '8px',
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    width: '100%',
+    width: '90%',
     maxWidth: '400px',
   },
   title: {
@@ -92,6 +131,12 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
+  },
+  checkboxGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.9rem'
   },
   label: {
     fontSize: '0.9rem',

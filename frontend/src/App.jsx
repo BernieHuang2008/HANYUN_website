@@ -49,6 +49,8 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('hanyun_user');
+    document.cookie = "hanyun_uid=; path=/; max-age=0";
+    document.cookie = "hanyun_token=; path=/; max-age=0";
     setIsAdminMode(false);
   };
 
