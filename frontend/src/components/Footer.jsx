@@ -6,6 +6,8 @@ const Footer = ({ isAdminMode }) => {
   const { t } = useTranslation();
   const [suggestion, setSuggestion] = useState('');
   const [feedbacks, setFeedbacks] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   useEffect(() => {
     if (isAdminMode) {
@@ -23,12 +25,21 @@ const Footer = ({ isAdminMode }) => {
     e.preventDefault();
     if (!suggestion.trim()) return;
 
+    setIsSubmitting(true);
+    setSubmitSuccess(false);
+
     try {
       await axios.post('/api/suggestion', { suggestion });
-      alert(t('suggestionSuccess'));
+      // alert(t('suggestionSuccess'));
       setSuggestion("");
+      setSubmitSuccess(true);
+      setTimeout(() => {
+          setSubmitSuccess(false);
+      }, 3000);
     } catch (error) {
       alert(t('suggestionFail'));
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -54,8 +65,20 @@ const Footer = ({ isAdminMode }) => {
                 placeholder={t('suggestionPlaceholder')}
                 value={suggestion}
                 onChange={(e) => setSuggestion(e.target.value)}
+                disabled={isSubmitting || submitSuccess}
               />
-              <button type="submit" className="suggestion-btn">{t('submit')}</button>
+              <button 
+                type="submit" 
+                className="suggestion-btn"
+                disabled={isSubmitting || submitSuccess}
+                style={{
+                  backgroundColor: submitSuccess ? '#6B8E23' : '', // OliveDrab (Ancient Green)
+                  cursor: (isSubmitting || submitSuccess) ? 'default' : 'pointer',
+                  opacity: isSubmitting ? 0.8 : 1
+                }}
+              >
+                 {isSubmitting ? t('submitting') : (submitSuccess ? t('suggestionSuccess') : t('submit'))}
+              </button>
             </form>
         ) : (
             <div style={{ maxHeight: '300px', overflowY: 'auto', background: 'white', color: 'black', borderRadius: '4px', padding: '10px' }}>

@@ -253,7 +253,7 @@ def delete_feedback(feedback_id):
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    del (tb_feedback["id"] == feedback_id)
+    (tb_feedback["id"] == feedback_id).delete()
     return jsonify({"success": True})
 
 

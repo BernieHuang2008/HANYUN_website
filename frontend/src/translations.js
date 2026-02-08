@@ -1,6 +1,6 @@
 export const translations = {
   en: {
-    appName: "Shenzhen Experimental School Hanyun Club",
+    appName: "SZSY Hanyun Club",
     login: "Login",
     logout: "Logout",
     manage: "Manage",
@@ -16,9 +16,10 @@ export const translations = {
     suggestionBox: "Suggestion Box",
     suggestionPlaceholder: "Enter your suggestion...",
     submit: "Submit",
+    submitting: "Submitting...",
     suggestionSuccess: "Thank you for your suggestion!",
     suggestionFail: "Failed to submit, please try again.",
-    copyright: "© {year} Shenzhen Experimental School Hanyun Club All Rights Reserved",
+    copyright: "© {year} SZSY Hanyun Club . All Rights Reserved.",
     loginTitle: "Member Login",
     studentNo: "Student No",
     enterStudentNo: "Please enter Student No",
@@ -75,6 +76,7 @@ export const translations = {
     more: "更多",
     suggestionBox: "谏言箱",
     suggestionPlaceholder: "请赐教...",
+    submitting: "呈递中",
     submit: "呈递",
     suggestionSuccess: "感谢您的建言！",
     suggestionFail: "呈递失败，请稍后再试。",
