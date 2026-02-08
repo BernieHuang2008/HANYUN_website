@@ -73,17 +73,6 @@ load_default_content()
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-
-def isTrigger(trigger):
-    # s: trigger, t: type, d: date
-    if trigger["t"] == "date":
-        return trigger["d"] == datetime.now(timezone(timedelta(hours=8))).strftime(
-            "%Y-%m-%d"
-        )
-    else:
-        return False
-
-
 def load_content(content_id):
     record = tb_content.select((tb_content["id"] == content_id))
     if record:
