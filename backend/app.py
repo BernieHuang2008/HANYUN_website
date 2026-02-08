@@ -39,20 +39,26 @@ tb_feedback.struct(
 def load_default_content():
     defaultc = {
         "content": {
-            "bn": {
-                "img": "https://picsum.photos/800/400?grayscale",
-                "st": "期待与你在深实相遇",
-                "t": "汉韵社秋季招新火热进行中",
+            "banner": {
+                "imageUrl": "https://picsum.photos/800/400?grayscale",
+                "subtitle": "期待与你在深实相遇",
+                "title": "汉韵社秋季招新火热进行中",
             },
-            "res": [{"l": "#", "t": "汉服形制发展史 (PDF)"}],
-            "tls": [
-                {"l": "/tools/calendar", "t": "活动日历查询"},
-                {"l": "/tools/rent", "t": "服装借用系统"},
-                {"l": "/tools/checkin", "t": "社员签到入口"},
-                {"l": "/ttt", "t": "ttt"},
+            "resources": [{"url": "#", "title": "汉服形制发展史 (PDF)"}],
+            "tools": [
+                {"url": "/tools/calendar", "title": "活动日历查询"},
+                {"url": "/tools/rent", "title": "服装借用系统"},
+                {"url": "/tools/checkin", "title": "社员签到入口"},
+                {"url": "/ttt", "title": "ttt"},
             ],
         },
-        "members": [],
+        "members": [
+            {
+                "name": "张三",
+                "avatar": "社长",
+                "detail": "负责整体社团运营与管理。",
+            }
+        ],
     }
 
     for key, value in defaultc.items():

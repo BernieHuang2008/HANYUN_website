@@ -117,23 +117,23 @@ function App() {
         <div className="left-column">
           <MemberWall isAdminMode={isAdminMode} />
           <Resources 
-            data={content?.res} 
+            data={content?.resources} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('res', d)} 
+            onSave={(d) => updateContent('resources', d)} 
           />
           <Tools 
-            data={content?.tls} 
+            data={content?.tools} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('tls', d)} 
+            onSave={(d) => updateContent('tools', d)} 
           />
         </div>
 
         {/* Right Column */}
         <div className="right-column">
           <ClubBanner 
-            data={content?.bn} 
+            data={content?.banner} 
             isAdminMode={isAdminMode} 
-            onSave={(d) => updateContent('bn', d)} 
+            onSave={(d) => updateContent('banner', d)} 
           />
           <DailyCalendar />
         </div>

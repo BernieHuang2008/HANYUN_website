@@ -8,7 +8,7 @@ const Resources = ({ data, isAdminMode, onSave }) => {
   
   // Default fallback if data is missing/loading
   const list = data || [
-      { "t": t('loading'), "l": "#" }
+      { "title": t('loading'), "url": "#" }
   ];
 
   return (
@@ -34,7 +34,7 @@ const Resources = ({ data, isAdminMode, onSave }) => {
       <div className="section-title">{t('resources')}</div>
       <ul className="resource-list">
         {list.map((item, index) => (
-            <li key={index}><a href={item.l}>{item.t}</a></li>
+            <li key={index}><a href={item.url}>{item.title}</a></li>
         ))}
       </ul>
     </div>
