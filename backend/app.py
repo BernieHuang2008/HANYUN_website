@@ -103,7 +103,7 @@ def login():
     if len(user_data):
         # User exists, check password
         user = user_data[0]
-        if user.get("pwd") == password:
+        if user["pwd"] == password:
             return jsonify({
                 "success": True, 
                 "user": {
@@ -148,7 +148,7 @@ def check_is_admin():
     
     user = users[0]
     # Check password hash (token) and role
-    if user.get('pwd') == token and user.get('role') == 'admin':
+    if user["pwd"] == token and user["role"] == 'admin':
         return True
     
     return False
