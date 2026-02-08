@@ -33,7 +33,7 @@ const Footer = ({ isAdminMode }) => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this suggestion?")) return;
+    if (!window.confirm(t('confirmDelete'))) return;
     try {
         await axios.delete(`/api/feedback/${id}`);
         fetchFeedbacks();
@@ -62,18 +62,16 @@ const Footer = ({ isAdminMode }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                     <thead>
                         <tr style={{ background: '#eee' }}>
-                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>ID</th>
-                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>User</th>
-                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>Time</th>
-                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>Content</th>
-                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>Controls</th>
+                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>{t('id')}</th>
+                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>{t('time')}</th>
+                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>{t('content')}</th>
+                            <th style={{ padding: '5px', border: '1px solid #ddd' }}>{t('controls')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {feedbacks.map(f => (
                             <tr key={f.id}>
                                 <td style={{ padding: '5px', border: '1px solid #ddd', textAlign: 'center' }}>{f.id}</td>
-                                <td style={{ padding: '5px', border: '1px solid #ddd', textAlign: 'center' }}>{f.uid}</td>
                                 <td style={{ padding: '5px', border: '1px solid #ddd', textAlign: 'center', fontSize: '0.8rem' }}>{f.time}</td>
                                 <td style={{ padding: '5px', border: '1px solid #ddd' }}>{f.suggestion}</td>
                                 <td style={{ padding: '5px', border: '1px solid #ddd', textAlign: 'center' }}>
@@ -81,13 +79,13 @@ const Footer = ({ isAdminMode }) => {
                                         onClick={() => handleDelete(f.id)}
                                         style={{ background: 'red', color: 'white', border: 'none', borderRadius: '3px', padding: '2px 5px', cursor: 'pointer' }}
                                     >
-                                        Delete
+                                        {t('delete')}
                                     </button>
                                 </td>
                             </tr>
                         ))}
                         {feedbacks.length === 0 && (
-                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '10px' }}>No feedbacks</td></tr>
+                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '10px' }}>{t('noFeedbacks')}</td></tr>
                         )}
                     </tbody>
                 </table>

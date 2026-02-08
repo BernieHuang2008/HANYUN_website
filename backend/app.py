@@ -14,6 +14,7 @@ if os.path.exists("backend/.env.local"):
 url = os.getenv("TURSO_DATABASE_URL")
 auth_token = os.getenv("TURSO_AUTH_TOKEN")
 
+
 # init msql
 class TursoDriver(msql.drivers.sqlite):
     @staticmethod
@@ -32,7 +33,9 @@ tb_feedback = db["feedback"]
 tb_user.struct({"id": str, "username": str, "role": str, "pwd": str}, primaryKey="id")
 tb_content.struct({"id": str, "json": str}, primaryKey="id")
 tb_feedback.struct(
-    {"id": int, "uid": str, "suggestion": str, "time": str}, primaryKey="id", autoIncrement=True
+    {"id": int, "uid": str, "suggestion": str, "time": str},
+    primaryKey="id",
+    autoIncrement=True,
 )
 
 
@@ -73,6 +76,7 @@ load_default_content()
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+
 def load_content(content_id):
     record = tb_content.select((tb_content["id"] == content_id))
     if record:
@@ -94,7 +98,9 @@ def login():
 
     if not student_no or not password:
         return (
-            jsonify({"success": False, "message": "Please provide Student No and Password"}),
+            jsonify(
+                {"success": False, "message": "Please provide Student No and Password"}
+            ),
             400,
         )
 
@@ -104,16 +110,18 @@ def login():
         # User exists, check password
         user = user_data[0]
         if user["pwd"] == password:
-            return jsonify({
-                "success": True, 
-                "user": {
-                    "id": user["id"],
-                    "username": user["username"],
-                    "role": user["role"]
+            return jsonify(
+                {
+                    "success": True,
+                    "user": {
+                        "id": user["id"],
+                        "username": user["username"],
+                        "role": user["role"],
+                    },
                 }
-            })
+            )
         else:
-             return (
+            return (
                 jsonify({"success": False, "message": "Invalid credentials"}),
                 401,
             )
@@ -123,34 +131,36 @@ def login():
             "id": student_no,
             "username": "🥒",
             "role": "visitor",  # role Default: visitor
-            "pwd": password
+            "pwd": password,
         }
         tb_user.insert(**new_user)
-        return jsonify({
-            "success": True, 
-            "user": {
-                "id": new_user["id"],
-                "username": new_user["username"],
-                "role": new_user["role"]
+        return jsonify(
+            {
+                "success": True,
+                "user": {
+                    "id": new_user["id"],
+                    "username": new_user["username"],
+                    "role": new_user["role"],
+                },
             }
-        })
+        )
 
-        
+
 def check_is_admin():
-    uid = request.cookies.get('hanyun_uid')
-    token = request.cookies.get('hanyun_token')
+    uid = request.cookies.get("hanyun_uid")
+    token = request.cookies.get("hanyun_token")
     if not uid or not token:
         return False
-    
-    users = tb_user.select((tb_user['id'] == uid))
+
+    users = tb_user.select((tb_user["id"] == uid))
     if not users:
         return False
-    
+
     user = users[0]
     # Check password hash (token) and role
-    if user["pwd"] == token and user["role"] == 'admin':
+    if user["pwd"] == token and user["role"] == "admin":
         return True
-    
+
     return False
 
 
@@ -175,7 +185,7 @@ def get_members():
 def update_members():
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
-    
+
     data = request.json  # Data uses short keys directly
     save_content("members", data)
     return jsonify({"success": True})
@@ -208,8 +218,8 @@ def submit_suggestion():
     suggestion = data.get("suggestion")
     if not suggestion:
         return jsonify({"success": False, "message": "No suggestion provided"}), 400
-    
-    uid = request.cookies.get('hanyun_uid') or "Guest"
+
+    uid = request.cookies.get("hanyun_uid") or "Guest"
     dt = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
 
     tb_feedback.insert(uid=uid, suggestion=suggestion, time=dt)
@@ -223,17 +233,29 @@ def get_feedback():
 
     feedbacks = tb_feedback.select()
     # Ensure list format
-    if not feedbacks:
+    if len(feedbacks) == 0:
         feedbacks = []
+    else:
+        feedbacks = [
+            {
+                "id": fb["id"],
+                "uid": fb["uid"],
+                "time": fb["time"],
+                "suggestion": fb["suggestion"],
+            }
+            for fb in feedbacks
+        ]
     return jsonify(feedbacks)
+
 
 @app.route("/api/feedback/<int:feedback_id>", methods=["DELETE"])
 def delete_feedback(feedback_id):
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
-    
+
     tb_feedback.delete((tb_feedback["id"] == feedback_id))
     return jsonify({"success": True})
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)

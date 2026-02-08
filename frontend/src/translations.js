@@ -48,7 +48,16 @@ export const translations = {
     key_subtitle: "Subtitle",
     key_name: "Name",
     key_detail: "Detail",
-    key_avatar: "Avatar URL"
+    key_avatar: "Avatar URL",
+    // Feedback
+    id: "ID",
+    user: "User",
+    time: "Time",
+    content: "Content",
+    controls: "Controls",
+    delete: "Delete",
+    confirmDelete: "Delete this suggestion?",
+    noFeedbacks: "No feedbacks"
   },
   zh: {
     appName: "深圳实验学校汉韵社",
@@ -99,6 +108,15 @@ export const translations = {
     key_subtitle: "副标题",
     key_name: "姓名",
     key_detail: "详情",
-    key_avatar: "头像链接"
+    key_avatar: "头像链接",
+    // Feedback
+    id: "编号",
+    user: "用户",
+    time: "时间",
+    content: "内容",
+    controls: "操作",
+    delete: "删除",
+    confirmDelete: "确定删除此建议？",
+    noFeedbacks: "暂无建议"
   }
 };
