@@ -62,9 +62,9 @@ function App() {
 
   return (
     <div className="app-container">
-      <header style={{ padding: '20px', textAlign: 'center', background: '#8b0000', color: 'white', position: 'relative' }}>
-          <h1 style={{ margin: 0 }}>{t('appName')}</h1>
-          <div style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <header className="app-header">
+          <h1 className="app-title">{t('appName')}</h1>
+          <div className="header-controls">
              <button 
                 onClick={toggleLanguage}
                 style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
