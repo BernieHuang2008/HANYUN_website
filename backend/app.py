@@ -32,7 +32,7 @@ tb_feedback = db["feedback"]
 tb_user.struct({"id": str, "username": str, "role": str, "pwd": str}, primaryKey="id")
 tb_content.struct({"id": str, "json": str}, primaryKey="id")
 tb_feedback.struct(
-    {"id": int, "uid": int, "suggestion": str}, primaryKey="id", autoIncrement=True
+    {"id": int, "uid": str, "suggestion": str, "time": str}, primaryKey="id", autoIncrement=True
 )
 
 
@@ -206,11 +206,34 @@ def update_content():
 def submit_suggestion():
     data = request.json
     suggestion = data.get("suggestion")
-    # In a real app, save this to a database
-    print(f"Received suggestion: {suggestion}")
-    tb_feedback.insert({"uid": request.cookies.get('hanyun_uid'), "suggestion": suggestion})
+    if not suggestion:
+        return jsonify({"success": False, "message": "No suggestion provided"}), 400
+    
+    uid = request.cookies.get('hanyun_uid') or "Guest"
+    dt = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
+
+    tb_feedback.insert(uid=uid, suggestion=suggestion, time=dt)
     return jsonify({"status": "success", "message": "感谢您的建议！"})
 
+
+@app.route("/api/feedback", methods=["GET"])
+def get_feedback():
+    if not check_is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    feedbacks = tb_feedback.select()
+    # Ensure list format
+    if not feedbacks:
+        feedbacks = []
+    return jsonify(feedbacks)
+
+@app.route("/api/feedback/<int:feedback_id>", methods=["DELETE"])
+def delete_feedback(feedback_id):
+    if not check_is_admin():
+        return jsonify({"success": False, "message": "Unauthorized"}), 403
+    
+    tb_feedback.delete((tb_feedback["id"] == feedback_id))
+    return jsonify({"success": True})
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)

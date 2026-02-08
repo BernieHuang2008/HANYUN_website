@@ -141,7 +141,7 @@ function App() {
         </div>
       </div>
 
-      <Footer />
+      <Footer isAdminMode={isAdminMode} />
     </div>
   );
 }
