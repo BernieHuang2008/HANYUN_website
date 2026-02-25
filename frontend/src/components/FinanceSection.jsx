@@ -10,7 +10,9 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
   const fetchFinance = () => {
     // Get latest 5
     axios.get('/api/finance?limit=5')
-      .then(res => {
+      .then(async res => {
+        const AU_PRICE = 80;
+        res.data.balance_xag = res.data.balance / AU_PRICE / 50; // 50g / 两
         setData(res.data);
         setLoading(false);
       })
@@ -37,61 +39,67 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
         hour: '2-digit', minute: '2-digit'
     });
   };
+  const color = '#fff9c4';
 
   const jaggedStyle = {
-    background: '#fff9c4', // Yellowish receipt color
+    background: color, // Yellowish receipt color
     position: 'relative',
     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
     padding: '20px',
-    marginBottom: '20px', // Removed auto margin to match full width
+    marginBottom: '20px',
+    marginTop: '10px',
     width: '100%',
     boxSizing: 'border-box',
-    fontFamily: '"Courier New", Courier, monospace', // Monospace for receipt feel
+    fontFamily: '"Courier New", Courier, monospace',
     color: '#333',
-    // Torn paper effect using radial gradient
-    // This creates a "tooth" pattern at the top and bottom
-    // We can use mask-image (modern) or background-image hack
   };
+
+  const sawtoothCss = {
+      position: 'absolute',
+      left: 0,
+      width: '100%',
+      height: '10px',
+      zIndex: 1
+  };
+  
+  // Encode SVG for URL
+  const topSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10' preserveAspectRatio='none'%3E%3Cpath d='M0 10 L10 0 L20 10 Z' fill='%23fff9c4'/%3E%3C/svg%3E`;
+  const bottomSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L10 10 L20 0 Z' fill='%23fff9c4'/%3E%3C/svg%3E`;
 
   return (
     <div className="receipt-container" style={jaggedStyle}>
-      {/* Top jagged edge */}
       <div style={{
-          position: 'absolute',
+          ...sawtoothCss,
           top: '-10px',
-          left: 0,
-          right: 0,
-          height: '10px',
-          background: `radial-gradient(circle, transparent, transparent 50%, #fff9c4 50%, #fff9c4) 0 0/20px 20px`
-          // Actually, standard "sawtooth" is easier with linear-gradient
+          backgroundImage: `url("${topSvg}")`,
+          backgroundSize: '20px 10px',
+          backgroundRepeat: 'repeat-x'
       }} />
-       <div style={{
-          position: 'absolute',
-          top: '-10px',
-          left: 0,
-          width: '100%',
-          height: '10px',
-          background: 'linear-gradient(45deg, transparent 33.333%, #fff9c4 33.333%, #fff9c4 66.667%, transparent 66.667%), linear-gradient(-45deg, transparent 33.333%, #fff9c4 33.333%, #fff9c4 66.667%, transparent 66.667%)',
-          backgroundSize: '20px 20px',
-          backgroundPosition: '0 0'
+
+      <div style={{
+          ...sawtoothCss,
+          bottom: '-10px',
+          backgroundImage: `url("${bottomSvg}")`,
+          backgroundSize: '20px 10px',
+          backgroundRepeat: 'repeat-x'
       }} />
 
       <div className="receipt-content">
         <h2 style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: '10px', marginBottom: '10px', fontSize: '1.5rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
-            {t('finance_title') || "汉韵·账房"}
+            {t('finance_title')}
         </h2>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: 'bold', fontFamily: '"Kaiti", "STKaiti", serif', fontSize: '1.2rem' }}>
-            <span>{t('finance_balance') || "盈余"}:</span>
-            <span>{data.balance.toFixed(2)} 两</span>
+            <span>{t('finance_balance')}:</span>
+            <span>{data.balance_xag.toFixed(3)} {t('finance_unit_xag')} / {data.balance.toFixed(2)} {t('finance_unit_cny')}</span>
         </div>
         
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
             <thead>
                 <tr style={{ borderBottom: '1px solid #333' }}>
-                    <th style={{ textAlign: 'left' }}>日期</th>
-                    <th style={{ textAlign: 'left' }}>摘要</th>
-                    <th style={{ textAlign: 'right' }}>银两</th>
+                    <th style={{ textAlign: 'left' }}>{t('finance_date')}</th>
+                    <th style={{ textAlign: 'left' }}>{t('finance_summary')}</th>
+                    <th style={{ textAlign: 'right' }}>{t('finance_amount')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -100,7 +108,7 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
                         <td style={{ padding: '5px 0' }}>{formatDate(r.time).split(' ')[0]}</td>
                         <td style={{ padding: '5px 0' }}>
                             <div>{r.detail}</div>
-                            <div style={{ fontSize: '0.8em', color: '#666' }}>经手: {r.people}</div>
+                            <div style={{ fontSize: '0.8em', color: '#666' }}>{t('finance_handler')} {r.people}</div>
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 0', color: r.money >= 0 ? 'green' : 'red' }}>
                             {r.money > 0 ? '+' : ''}{r.money.toFixed(2)}
@@ -122,7 +130,7 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
                     fontSize: '1rem',
                     fontFamily: '"Kaiti", "STKaiti", serif'
                 }}>
-                {t('more') || "查阅详籍"}
+                {t('finance_more')}
             </button>
         </div>
 

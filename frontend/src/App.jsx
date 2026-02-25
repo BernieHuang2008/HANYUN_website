@@ -144,11 +144,11 @@ function App() {
             isAdminMode={isAdminMode} 
             onSave={(d) => updateContent('banner', d)} 
           />
+          <DailyCalendar />
           <FinanceSection 
             isAdminMode={isAdminMode} 
             onShowMore={() => setView('finance')} 
           />
-          <DailyCalendar />
         </div>
       </div>
 
