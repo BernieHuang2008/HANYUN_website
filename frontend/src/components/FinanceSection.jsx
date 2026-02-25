@@ -84,6 +84,15 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
           backgroundRepeat: 'repeat-x'
       }} />
 
+      {isAdminMode && (
+          <button 
+            onClick={onShowMore}
+            style={{ position: 'absolute', top: '10px', right: '10px', fontSize: '0.8rem' }}
+          >
+            {t('edit')}
+          </button>
+      )}
+
       <div className="receipt-content">
         <h2 style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: '10px', marginBottom: '10px', fontSize: '1.5rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
             {t('finance_title')}
@@ -133,30 +142,6 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
                 {t('finance_more')}
             </button>
         </div>
-
-        {isAdminMode && (
-             <div 
-                onClick={onShowMore}
-                style={{ 
-                   position: 'absolute', 
-                   top: 0, left: 0, right: 0, bottom: 0, 
-                   background: 'rgba(0,0,0,0.05)', 
-                   cursor: 'pointer',
-                   display: 'flex',
-                   alignItems: 'center',
-                   justifyContent: 'center',
-                   color: 'rgba(0,0,0,0.5)',
-                   fontSize: '1.2rem',
-                   fontWeight: 'bold',
-                   opacity: 0,
-                   transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => e.target.style.opacity = 1}
-                onMouseLeave={(e) => e.target.style.opacity = 0}
-             >
-                {t('edit')}
-             </div>
-        )}
       </div>
     </div>
   );
