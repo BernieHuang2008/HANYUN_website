@@ -11,7 +11,7 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
     // Get latest 5
     axios.get('/api/finance?limit=5')
       .then(async res => {
-        const AU_PRICE = 80;
+        const AU_PRICE = 19.552;
         res.data.balance_xag = res.data.balance / AU_PRICE / 50; // 50g / 两
         setData(res.data);
         setLoading(false);
