@@ -81,7 +81,17 @@ export const translations = {
     finance_modal_edit: "Edit Record",
     finance_modal_add: "Add Record",
     finance_cancel: "Cancel",
-    finance_save: "Save"
+    finance_save: "Save",
+    // Profile
+    profile: "Profile",
+    profileTitle: "Personal Center",
+    changeUsername: "Change Display Name",
+    newUsername: "New Name",
+    enterNewUsername: "Enter new display name",
+    saveUsername: "Save",
+    savingUsername: "Saving...",
+    usernameUpdated: "Display name updated!",
+    usernameUpdateFailed: "Failed to update display name."
   },
   zh: {
     appName: "深圳实验学校汉韵社",
@@ -165,6 +175,16 @@ export const translations = {
     finance_modal_edit: "修订账目",
     finance_modal_add: "新增账目",
     finance_cancel: "作罢",
-    finance_save: "存案"
+    finance_save: "存案",
+    // Profile
+    profile: "个人中心",
+    profileTitle: "个人中心",
+    changeUsername: "更改显名",
+    newUsername: "新显名",
+    enterNewUsername: "请输入新显名",
+    saveUsername: "存案",
+    savingUsername: "存案中...",
+    usernameUpdated: "显名已更改！",
+    usernameUpdateFailed: "更改失败，请稍后再试。"
   }
 };

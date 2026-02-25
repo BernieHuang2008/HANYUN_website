@@ -324,5 +324,36 @@ def delete_feedback(feedback_id):
     return jsonify({"success": True})
 
 
+def check_auth():
+    """Returns user dict if authenticated, else None."""
+    uid = request.cookies.get("hanyun_uid")
+    token = request.cookies.get("hanyun_token")
+    if not uid or not token:
+        return None
+    users = tb_user.select((tb_user["id"] == uid))
+    if not users:
+        return None
+    user = users[0]
+    if user["pwd"] == token:
+        return user
+    return None
+
+
+# API: Update Username
+@app.route("/api/user/username", methods=["PUT"])
+def update_username():
+    user = check_auth()
+    if not user:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    data = request.json
+    new_username = data.get("username", "").strip()
+    if not new_username:
+        return jsonify({"success": False, "message": "Username cannot be empty"}), 400
+
+    tb_user.update(tb_user["id"] == user["id"], username=new_username)
+    return jsonify({"success": True, "username": new_username})
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=3000)

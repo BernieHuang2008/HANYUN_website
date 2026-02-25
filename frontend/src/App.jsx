@@ -10,6 +10,7 @@ import DailyCalendar from './components/DailyCalendar';
 import Footer from './components/Footer';
 import FinanceSection from './components/FinanceSection';
 import FinancePage from './components/FinancePage';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
   const { t, toggleLanguage, language } = useTranslation();
@@ -17,7 +18,7 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [content, setContent] = useState(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [view, setView] = useState('home'); // 'home' or 'finance'
+  const [view, setView] = useState('home'); // 'home', 'finance', or 'profile'
 
   useEffect(() => {
     const storedUser = localStorage.getItem('hanyun_user');
@@ -55,6 +56,13 @@ function App() {
     document.cookie = "hanyun_uid=; path=/; max-age=0";
     document.cookie = "hanyun_token=; path=/; max-age=0";
     setIsAdminMode(false);
+    setView('home');
+  };
+
+  const handleUsernameChange = (newUsername) => {
+    const updatedUser = { ...user, username: newUsername };
+    setUser(updatedUser);
+    localStorage.setItem('hanyun_user', JSON.stringify(updatedUser));
   };
 
   if (showLogin) {
@@ -65,6 +73,10 @@ function App() {
 
   if (view === 'finance') {
     return <FinancePage onBack={() => setView('home')} isAdminMode={isAdminMode} />;
+  }
+
+  if (view === 'profile') {
+    return <ProfilePage user={user} onBack={() => setView('home')} onLogout={handleLogout} onUsernameChange={handleUsernameChange} />;
   }
 
   return (
@@ -81,6 +93,12 @@ function App() {
             {user ? (
               <>
                 <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{user.username.replace("🥒", `_${user.id}`)} ({user.id})</span>
+                <button
+                  onClick={() => setView('profile')}
+                  style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
+                >
+                  {t('profile')}
+                </button>
                  {isAdmin && (
                     <button 
                       onClick={() => setIsAdminMode(!isAdminMode)}
@@ -97,12 +115,6 @@ function App() {
                       {isAdminMode ? t('exitAdmin') : t('manage')}
                     </button>
                  )}
-                <button 
-                  onClick={handleLogout}
-                  style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
-                >
-                  {t('logout')}
-                </button>
               </>
             ) : (
                 <button 
