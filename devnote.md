@@ -7,6 +7,3 @@
 - Any API endpoints must be recorded in backend/API.md
 
 - Any new components in the frontend shall consider the "admin manage mode", ie providing an edit button like the other components.
-
-- Due to stress storage, any data stored via vercel vercel edge config shall be minimun. Especially the "key"s, because they are not visible to normal users (eg, key "username" -> "n"). However, anywhere that uses a short key, there shall be a comment explaining the full meaning of the short key to keep the code readable.
-

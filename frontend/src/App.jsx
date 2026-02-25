@@ -8,6 +8,8 @@ import Tools from './components/Tools';
 import ClubBanner from './components/ClubBanner';
 import DailyCalendar from './components/DailyCalendar';
 import Footer from './components/Footer';
+import FinanceSection from './components/FinanceSection';
+import FinancePage from './components/FinancePage';
 
 function App() {
   const { t, toggleLanguage, language } = useTranslation();
@@ -15,6 +17,7 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [content, setContent] = useState(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [view, setView] = useState('home'); // 'home' or 'finance'
 
   useEffect(() => {
     const storedUser = localStorage.getItem('hanyun_user');
@@ -59,6 +62,10 @@ function App() {
   }
 
   const isAdmin = user && (user.role === 'admin');
+
+  if (view === 'finance') {
+    return <FinancePage onBack={() => setView('home')} isAdminMode={isAdminMode} />;
+  }
 
   return (
     <div className="app-container">
@@ -136,6 +143,10 @@ function App() {
             data={content?.banner} 
             isAdminMode={isAdminMode} 
             onSave={(d) => updateContent('banner', d)} 
+          />
+          <FinanceSection 
+            isAdminMode={isAdminMode} 
+            onShowMore={() => setView('finance')} 
           />
           <DailyCalendar />
         </div>

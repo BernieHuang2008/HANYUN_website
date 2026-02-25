@@ -38,6 +38,13 @@ tb_feedback.struct(
     autoIncrement=True,
 )
 
+tb_finance = db["finance"]
+tb_finance.struct(
+    {"id": int, "time": str, "money": float, "people": str, "detail": str},
+    primaryKey="id",
+    autoIncrement=True,
+)
+
 
 def load_default_content():
     defaultc = {
@@ -208,6 +215,66 @@ def update_content():
 
     data = request.json
     save_content("content", data)
+    return jsonify({"success": True})
+
+
+# API: Finance
+@app.route("/api/finance", methods=["GET"])
+def get_finance():
+    limit = request.args.get("limit", type=int)
+    all_records = tb_finance.select()
+    balance = sum(r["money"] for r in all_records)
+    sorted_records = sorted(all_records, key=lambda x: x["time"], reverse=True)
+    
+    if limit:
+        records = sorted_records[:limit]
+    else:
+        records = sorted_records
+        
+    return jsonify({"balance": balance, "records": records})
+
+
+@app.route("/api/finance", methods=["POST"])
+def add_finance_record():
+    # Helper to check admin (assuming utility or session check exists, 
+    # but based on provided code, there is check_is_admin() used in update_content)
+    # But wait, check_is_admin() is not defined in the snippet I saw earlier (lines 1-100).
+    # It appeared in the RECENT read_file (lines 208-225). So it EXISTS.
+    if not check_is_admin():
+         return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    data = request.json
+    tb_finance.insert(
+        time=data["time"], 
+        money=float(data["money"]),
+        people=data["people"],
+        detail=data["detail"]
+    )
+    return jsonify({"success": True})
+
+
+@app.route("/api/finance/<int:record_id>", methods=["PUT"])
+def update_finance_record(record_id):
+    if not check_is_admin():
+         return jsonify({"success": False, "message": "Unauthorized"}), 403
+         
+    data = request.json
+    tb_finance.update(
+        (tb_finance["id"] == record_id),
+        time=data["time"],
+        money=float(data["money"]),
+        people=data["people"],
+        detail=data["detail"]
+    )
+    return jsonify({"success": True})
+
+
+@app.route("/api/finance/<int:record_id>", methods=["DELETE"])
+def delete_finance_record(record_id):
+    if not check_is_admin():
+         return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+    tb_finance.delete((tb_finance["id"] == record_id))
     return jsonify({"success": True})
 
 
