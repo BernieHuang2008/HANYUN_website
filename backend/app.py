@@ -274,7 +274,7 @@ def delete_finance_record(record_id):
     if not check_is_admin():
          return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    tb_finance.delete((tb_finance["id"] == record_id))
+    (tb_finance["id"] == record_id).delete()
     return jsonify({"success": True})
 
 
