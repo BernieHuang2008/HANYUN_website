@@ -351,7 +351,7 @@ def update_username():
     if not new_username:
         return jsonify({"success": False, "message": "Username cannot be empty"}), 400
 
-    (tb_user["id"] == user["id"]).update(username=new_username)
+    (tb_user["id"] == user["id"]).update({"username": new_username})
     return jsonify({"success": True, "username": new_username})
 
 
