@@ -91,7 +91,7 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
         
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: 'bold', fontFamily: '"Kaiti", "STKaiti", serif', fontSize: '1.2rem' }}>
             <span>{t('finance_balance')}:</span>
-            <span>{data.balance_xag.toFixed(3)} {t('finance_unit_xag')} / {data.balance.toFixed(2)} {t('finance_unit_cny')}</span>
+            <span>{(data.balance_xag || 0).toFixed(3)} {t('finance_unit_xag')} / {(data.balance || 0).toFixed(2)} {t('finance_unit_cny')}</span>
         </div>
         
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
