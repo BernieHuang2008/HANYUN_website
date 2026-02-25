@@ -43,8 +43,9 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
     position: 'relative',
     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
     padding: '20px',
-    margin: '20px auto',
-    maxWidth: '100%',
+    marginBottom: '20px', // Removed auto margin to match full width
+    width: '100%',
+    boxSizing: 'border-box',
     fontFamily: '"Courier New", Courier, monospace', // Monospace for receipt feel
     color: '#333',
     // Torn paper effect using radial gradient
@@ -76,21 +77,21 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
       }} />
 
       <div className="receipt-content">
-        <h2 style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: '10px', marginBottom: '10px', fontSize: '1.2rem' }}>
-            {t('finance_title') || "汉韵账房"}
+        <h2 style={{ textAlign: 'center', borderBottom: '1px dashed #333', paddingBottom: '10px', marginBottom: '10px', fontSize: '1.5rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
+            {t('finance_title') || "汉韵·账房"}
         </h2>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: 'bold' }}>
-            <span>{t('finance_balance') || "结余"}:</span>
-            <span>¥ {data.balance.toFixed(2)}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: 'bold', fontFamily: '"Kaiti", "STKaiti", serif', fontSize: '1.2rem' }}>
+            <span>{t('finance_balance') || "盈余"}:</span>
+            <span>{data.balance.toFixed(2)} 两</span>
         </div>
         
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontFamily: '"Kaiti", "STKaiti", serif' }}>
             <thead>
                 <tr style={{ borderBottom: '1px solid #333' }}>
-                    <th style={{ textAlign: 'left' }}>Date</th>
-                    <th style={{ textAlign: 'left' }}>Item</th>
-                    <th style={{ textAlign: 'right' }}>Amt</th>
+                    <th style={{ textAlign: 'left' }}>日期</th>
+                    <th style={{ textAlign: 'left' }}>摘要</th>
+                    <th style={{ textAlign: 'right' }}>银两</th>
                 </tr>
             </thead>
             <tbody>
@@ -99,7 +100,7 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
                         <td style={{ padding: '5px 0' }}>{formatDate(r.time).split(' ')[0]}</td>
                         <td style={{ padding: '5px 0' }}>
                             <div>{r.detail}</div>
-                            <div style={{ fontSize: '0.8em', color: '#666' }}>@{r.people}</div>
+                            <div style={{ fontSize: '0.8em', color: '#666' }}>经手: {r.people}</div>
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 0', color: r.money >= 0 ? 'green' : 'red' }}>
                             {r.money > 0 ? '+' : ''}{r.money.toFixed(2)}
@@ -118,9 +119,10 @@ const FinanceSection = ({ isAdminMode, onShowMore }) => {
                     borderRadius: '20px',
                     padding: '5px 15px',
                     cursor: 'pointer',
-                    fontSize: '0.8rem'
+                    fontSize: '1rem',
+                    fontFamily: '"Kaiti", "STKaiti", serif'
                 }}>
-                {t('more') || "展开更多"}
+                {t('more') || "查阅详籍"}
             </button>
         </div>
 

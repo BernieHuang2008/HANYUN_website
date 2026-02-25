@@ -98,13 +98,13 @@ const FinancePage = ({ onBack, isAdminMode }) => {
   };
 
   return (
-    <div className="finance-page" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', background: 'rgba(255,255,255,0.9)', borderRadius: '8px', minHeight: '80vh' }}>
-      <button onClick={onBack} style={{ marginBottom: '20px', padding: '5px 10px' }}>&larr; Back</button>
+    <div className="finance-page" style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', background: 'rgba(255,255,255,0.9)', borderRadius: '8px', minHeight: '80vh', fontFamily: '"Kaiti", "STKaiti", serif' }}>
+      <button onClick={onBack} style={{ marginBottom: '20px', padding: '5px 10px', fontFamily: '"Kaiti", "STKaiti", serif', cursor: 'pointer' }}>&larr; 返回</button>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2>{t('finance_full_title') || "Finance Management"}</h2>
+          <h2 style={{ fontFamily: '"Kaiti", "STKaiti", serif' }}>{t('finance_full_title') || "度支总览"}</h2>
           <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-              Balance: ¥ {data.balance.toFixed(2)}
+              库银: {data.balance.toFixed(2)} 元
           </div>
       </div>
 
@@ -114,24 +114,25 @@ const FinancePage = ({ onBack, isAdminMode }) => {
             style={{ 
                 marginBottom: '15px', 
                 padding: '8px 15px', 
-                background: '#4CAF50', 
+                background: '#8b0000', 
                 color: 'white', 
                 border: 'none', 
                 borderRadius: '4px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontFamily: '"Kaiti", "STKaiti", serif'
             }}>
-              + Add Record
+              + 笔录新账
           </button>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-              <tr style={{ background: '#f2f2f2' }}>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Time</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Detail</th>
-                  <th style={{ padding: '10px', textAlign: 'left' }}>Person</th>
-                  <th style={{ padding: '10px', textAlign: 'right' }}>Amount</th>
-                  {isAdminMode && <th style={{ padding: '10px', textAlign: 'center' }}>Actions</th>}
+              <tr style={{ background: '#f4e4bc', borderBottom: '2px solid #8b0000' }}>
+                  <th style={{ padding: '10px' }}>时辰</th>
+                  <th style={{ padding: '10px' }}>事由</th>
+                  <th style={{ padding: '10px' }}>经手人</th>
+                  <th style={{ padding: '10px', textAlign: 'right' }}>银两</th>
+                  {isAdminMode && <th style={{ padding: '10px', textAlign: 'center' }}>操作</th>}
               </tr>
           </thead>
           <tbody>
@@ -140,13 +141,13 @@ const FinancePage = ({ onBack, isAdminMode }) => {
                       <td style={{ padding: '10px' }}>{new Date(r.time).toLocaleString()}</td>
                       <td style={{ padding: '10px' }}>{r.detail}</td>
                       <td style={{ padding: '10px' }}>{r.people}</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: r.money >= 0 ? 'green' : 'red' }}>
+                      <td style={{ padding: '10px', textAlign: 'right', color: r.money >= 0 ? '#8b0000' : 'green', fontWeight: 'bold' }}>
                           {r.money.toFixed(2)}
                       </td>
                       {isAdminMode && (
                           <td style={{ padding: '10px', textAlign: 'center' }}>
-                              <button onClick={() => handleEditClick(r)} style={{ marginRight: '5px' }}>Edit</button>
-                              <button onClick={() => handleDelete(r.id)} style={{ color: 'red' }}>Del</button>
+                              <button onClick={() => handleEditClick(r)} style={{ marginRight: '5px', cursor: 'pointer' }}>修订</button>
+                              <button onClick={() => handleDelete(r.id)} style={{ color: 'red', cursor: 'pointer' }}>删除</button>
                           </td>
                       )}
                   </tr>
@@ -160,11 +161,11 @@ const FinancePage = ({ onBack, isAdminMode }) => {
               position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
               background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
           }}>
-              <div style={{ background: 'white', padding: '20px', borderRadius: '8px', width: '400px' }}>
-                  <h3>{currentRecord ? 'Edit Record' : 'Add Record'}</h3>
+              <div style={{ background: '#fff9c4', padding: '20px', borderRadius: '8px', width: '400px', border: '2px solid #8b0000' }}>
+                  <h3 style={{ borderBottom: '1px solid #8b0000', paddingBottom: '10px', color: '#8b0000' }}>{currentRecord ? '修订账目' : '新增账目'}</h3>
                   <form onSubmit={handleFormSubmit}>
                       <div style={{ marginBottom: '10px' }}>
-                          <label>Time:</label>
+                          <label>日期:</label>
                           <input 
                             type="datetime-local" 
                             name="time" 
@@ -175,7 +176,7 @@ const FinancePage = ({ onBack, isAdminMode }) => {
                           />
                       </div>
                       <div style={{ marginBottom: '10px' }}>
-                          <label>Amount (+Income, -Expense):</label>
+                          <label>金额 (+收 / -支):</label>
                           <input 
                             type="number" 
                             step="0.01" 
@@ -187,7 +188,7 @@ const FinancePage = ({ onBack, isAdminMode }) => {
                           />
                       </div>
                       <div style={{ marginBottom: '10px' }}>
-                          <label>Person:</label>
+                          <label>经手人:</label>
                           <input 
                             type="text" 
                             name="people" 
@@ -198,7 +199,7 @@ const FinancePage = ({ onBack, isAdminMode }) => {
                           />
                       </div>
                       <div style={{ marginBottom: '10px' }}>
-                          <label>Detail:</label>
+                          <label>事由:</label>
                           <textarea 
                             name="detail" 
                             value={formData.detail} 
@@ -208,8 +209,8 @@ const FinancePage = ({ onBack, isAdminMode }) => {
                           />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                          <button type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                          <button type="submit" style={{ background: '#4CAF50', color: 'white', border: 'none', padding: '5px 15px' }}>Save</button>
+                          <button type="button" onClick={() => setIsModalOpen(false)}>作罢</button>
+                          <button type="submit" style={{ background: '#8b0000', color: 'white', border: 'none', padding: '5px 15px' }}>保存</button>
                       </div>
                   </form>
               </div>
