@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from '../LanguageContext';
+import { getSafeAvatarUrl } from '../utils/member';
 
 const MemberDetailPage = ({ member, onBack }) => {
   const { t } = useTranslation();
@@ -16,7 +17,7 @@ const MemberDetailPage = ({ member, onBack }) => {
     <div style={styles.page}>
       <div style={styles.card}>
         <button onClick={onBack} style={styles.backBtn}>&larr; {t('cancelBtn')}</button>
-        <img src={member.avatar || 'https://via.placeholder.com/120?text=%E9%9B%85'} alt={member.nickname} style={styles.avatar} />
+        <img src={getSafeAvatarUrl(member.avatar, 'https://via.placeholder.com/120?text=%E9%9B%85')} alt={member.nickname} style={styles.avatar} />
         <h2 style={styles.name}>{member.nickname}</h2>
         <p><strong>{t('studentNo')}:</strong> {member.id}</p>
         <p><strong>{t('memberBioTitle')}:</strong> {member.bio || t('noBio')}</p>

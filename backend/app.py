@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import os
 import hashlib
+from urllib.parse import urlparse
 import MercurySQL as msql
 import libsql
 
@@ -118,7 +119,7 @@ def get_user_profile(user):
 
 def cached_json_response(payload, max_age=300):
     body = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-    etag = hashlib.md5(body.encode("utf-8")).hexdigest()
+    etag = hashlib.sha256(body.encode("utf-8")).hexdigest()
     response = jsonify(payload)
     response.set_etag(etag)
     response.cache_control.public = True
@@ -131,6 +132,16 @@ def get_all_members_sorted():
     members = [get_user_profile(user) for user in users]
     members.sort(key=lambda x: x.get("createdAt") or "", reverse=True)
     return members
+
+
+def is_valid_avatar_url(url):
+    if not url:
+        return True
+    try:
+        parsed = urlparse(url)
+        return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+    except Exception:
+        return False
 
 
 # API: Login
@@ -437,6 +448,8 @@ def update_profile():
         return jsonify({"success": False, "message": "Nickname is too long"}), 400
     if len(bio) > 250:
         return jsonify({"success": False, "message": "Bio must be 250 chars or fewer"}), 400
+    if not is_valid_avatar_url(avatar):
+        return jsonify({"success": False, "message": "Avatar URL must be http/https"}), 400
 
     tb_user.update(
         tb_user["id"] == user["id"],

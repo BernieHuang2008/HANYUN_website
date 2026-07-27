@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from '../LanguageContext';
+import { getSafeAvatarUrl } from '../utils/member';
 
 const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpenMember, onMembersChanged }) => {
   const { t } = useTranslation();
@@ -64,7 +65,7 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
       <div className="member-grid">
         {members.map((member) => (
           <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
-            <img src={member.avatar || 'https://via.placeholder.com/50?text=%E9%9B%85'} alt={member.nickname} className="member-avatar" />
+            <img src={getSafeAvatarUrl(member.avatar)} alt={member.nickname} className="member-avatar" />
             <div className="member-name">{member.nickname}</div>
             <div className="member-tooltip">
               <strong>{member.nickname}</strong>
@@ -101,7 +102,7 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
                       className="member-select-row"
                       onClick={() => setSelectedIds([...selectedIds, member.id])}
                     >
-                      <img src={member.avatar || 'https://via.placeholder.com/32?text=%E9%9B%85'} alt={member.nickname} className="member-mini-avatar" />
+                      <img src={getSafeAvatarUrl(member.avatar, 'https://via.placeholder.com/32?text=%E9%9B%85')} alt={member.nickname} className="member-mini-avatar" />
                       <span>{member.nickname}</span>
                     </button>
                   ))}
@@ -124,7 +125,7 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
                         moveSelectedMember(fromIndex, index);
                       }}
                     >
-                      <img src={member.avatar || 'https://via.placeholder.com/32?text=%E9%9B%85'} alt={member.nickname} className="member-mini-avatar" />
+                      <img src={getSafeAvatarUrl(member.avatar, 'https://via.placeholder.com/32?text=%E9%9B%85')} alt={member.nickname} className="member-mini-avatar" />
                       <span>{member.nickname}</span>
                       <button
                         className="member-remove-btn"

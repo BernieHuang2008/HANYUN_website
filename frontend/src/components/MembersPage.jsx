@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from '../LanguageContext';
+import { getSafeAvatarUrl } from '../utils/member';
 
 const MembersPage = ({ members, onBack, onOpenMember }) => {
   const { t } = useTranslation();
@@ -12,7 +13,7 @@ const MembersPage = ({ members, onBack, onOpenMember }) => {
         <div className="member-grid">
           {members.map((member) => (
             <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
-              <img src={member.avatar || 'https://via.placeholder.com/50?text=%E9%9B%85'} alt={member.nickname} className="member-avatar" />
+              <img src={getSafeAvatarUrl(member.avatar)} alt={member.nickname} className="member-avatar" />
               <div className="member-name">{member.nickname}</div>
               <div className="member-tooltip">
                 <strong>{member.nickname}</strong>

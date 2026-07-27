@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from '../LanguageContext';
+import { getSafeAvatarUrl } from '../utils/member';
 
 const ProfilePage = ({ user, onBack, onLogout, onUserUpdate }) => {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ const ProfilePage = ({ user, onBack, onLogout, onUserUpdate }) => {
   const [isError, setIsError] = useState(false);
 
   const displayName = (user?.username || '🥒').replace('🥒', `_${user?.id}`);
+  const safeAvatar = getSafeAvatarUrl(avatar, '');
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -55,8 +57,8 @@ const ProfilePage = ({ user, onBack, onLogout, onUserUpdate }) => {
         <div style={styles.card}>
           <div style={styles.cardDecorLine} />
           <div style={styles.avatarCircle}>
-            {avatar ? (
-              <img src={avatar} alt={displayName} style={styles.avatarImage} />
+            {safeAvatar ? (
+              <img src={safeAvatar} alt={displayName} style={styles.avatarImage} />
             ) : (
               <span style={styles.avatarChar}>{displayName.charAt(0)}</span>
             )}
