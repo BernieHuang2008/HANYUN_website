@@ -6,8 +6,20 @@ import json
 import os
 import hashlib
 from urllib.parse import urlparse
-import MercurySQL as msql
-import libsql
+from sqlalchemy import (
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    create_engine,
+    delete,
+    select,
+    update,
+)
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 # load .env.local for dev
 if os.path.exists("backend/.env.local"):
@@ -16,46 +28,102 @@ url = os.getenv("TURSO_DATABASE_URL")
 auth_token = os.getenv("TURSO_AUTH_TOKEN")
 
 
-# init msql
-class TursoDriver(msql.drivers.sqlite):
-    @staticmethod
-    def connect(db_name, url, auth_token):
-        # Connect directly to the remote URL to avoid local file writes on Vercel
-        conn = libsql.connect(url, auth_token=auth_token)
-        return conn
+def get_database_url():
+    if url:
+        database_url = url
+        if database_url.startswith("libsql://"):
+            database_url = database_url.replace("libsql://", "sqlite+libsql://", 1)
+        if database_url.startswith("sqlite+libsql://") and "secure=" not in database_url:
+            separator = "&" if "?" in database_url else "?"
+            database_url = f"{database_url}{separator}secure=true"
+        return database_url
+
+    db_path = os.path.join(os.path.dirname(__file__), "hanyun.db")
+    return f"sqlite:///{db_path}"
 
 
-msql.set_driver(TursoDriver)
-db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
+engine_args = {}
+if auth_token:
+    engine_args["connect_args"] = {"auth_token": auth_token}
 
-tb_user = db["user"]
-tb_content = db["content"]
-tb_feedback = db["feedback"]
-tb_user.struct(
-    {
-        "id": str,
-        "username": str,
-        "role": str,
-        "pwd": str,
-        "avatar": str,
-        "bio": str,
-        "created_at": str,
-    },
-    primaryKey="id",
+engine = create_engine(get_database_url(), **engine_args)
+metadata = MetaData()
+
+tb_user = Table(
+    "user",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("username", String),
+    Column("role", String),
+    Column("pwd", String),
+    Column("avatar", Text),
+    Column("bio", Text),
+    Column("created_at", String),
 )
-tb_content.struct({"id": str, "json": str}, primaryKey="id")
-tb_feedback.struct(
-    {"id": int, "uid": str, "suggestion": str, "time": str},
-    primaryKey="id",
-    autoIncrement=True,
+tb_content = Table(
+    "content",
+    metadata,
+    Column("id", String, primary_key=True),
+    Column("json", Text),
+)
+tb_feedback = Table(
+    "feedback",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("uid", String),
+    Column("suggestion", Text),
+    Column("time", String),
+)
+tb_finance = Table(
+    "finance",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("time", String),
+    Column("money", Float),
+    Column("people", String),
+    Column("detail", Text),
 )
 
-tb_finance = db["finance"]
-tb_finance.struct(
-    {"id": int, "time": str, "money": float, "people": str, "detail": str},
-    primaryKey="id",
-    autoIncrement=True,
-)
+metadata.create_all(engine)
+
+
+def select_rows(table, condition=None):
+    stmt = select(table)
+    if condition is not None:
+        stmt = stmt.where(condition)
+
+    with engine.connect() as conn:
+        return [dict(row) for row in conn.execute(stmt).mappings()]
+
+
+def insert_row(table, **values):
+    with engine.begin() as conn:
+        result = conn.execute(table.insert().values(**values))
+        return result.inserted_primary_key
+
+
+def upsert_row(table, key, **values):
+    stmt = sqlite_insert(table).values(**values)
+    update_values = {
+        column: value for column, value in values.items() if column != key
+    }
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[key],
+        set_=update_values,
+    )
+
+    with engine.begin() as conn:
+        conn.execute(stmt)
+
+
+def update_rows(table, condition, **values):
+    with engine.begin() as conn:
+        conn.execute(update(table).where(condition).values(**values))
+
+
+def delete_rows(table, condition):
+    with engine.begin() as conn:
+        conn.execute(delete(table).where(condition))
 
 
 def load_default_content():
@@ -78,10 +146,10 @@ def load_default_content():
     }
 
     for key, value in defaultc.items():
-        record = tb_content.select((tb_content["id"] == key))
+        record = select_rows(tb_content, tb_content.c.id == key)
         if not record:
             # print(json.dumps(value))
-            tb_content.insert(id=key, json=json.dumps(value))
+            insert_row(tb_content, id=key, json=json.dumps(value))
 
 
 load_default_content()
@@ -91,7 +159,7 @@ CORS(app)  # Enable CORS for all routes
 
 
 def load_content(content_id):
-    record = tb_content.select((tb_content["id"] == content_id))
+    record = select_rows(tb_content, tb_content.c.id == content_id)
     if record:
         return json.loads(record[0]["json"])
     return {}
@@ -99,7 +167,7 @@ def load_content(content_id):
 
 def save_content(content_id, content_data):
     json_data = json.dumps(content_data)
-    tb_content.insert(__auto=True, id=content_id, json=json_data)
+    upsert_row(tb_content, "id", id=content_id, json=json_data)
 
 
 def get_user_profile(user):
@@ -128,7 +196,7 @@ def cached_json_response(payload, max_age=300):
 
 
 def get_all_members_sorted():
-    users = tb_user.select()
+    users = select_rows(tb_user)
     members = [get_user_profile(user) for user in users]
     members.sort(key=lambda x: x.get("createdAt") or "", reverse=True)
     return members
@@ -159,7 +227,7 @@ def login():
             400,
         )
 
-    user_data = tb_user.select((tb_user["id"] == student_no))
+    user_data = select_rows(tb_user, tb_user.c.id == student_no)
 
     if len(user_data):
         # User exists, check password
@@ -195,7 +263,7 @@ def login():
             "bio": "",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
-        tb_user.insert(**new_user)
+        insert_row(tb_user, **new_user)
         return jsonify(
             {
                 "success": True,
@@ -217,7 +285,7 @@ def check_is_admin():
     if not uid or not token:
         return False
 
-    users = tb_user.select((tb_user["id"] == uid))
+    users = select_rows(tb_user, tb_user.c.id == uid)
     if not users:
         return False
 
@@ -298,7 +366,7 @@ def update_content():
 @app.route("/api/finance", methods=["GET"])
 def get_finance():
     limit = request.args.get("limit", type=int)
-    all_records = tb_finance.select()
+    all_records = select_rows(tb_finance)
     balance = sum(r["money"] for r in all_records)
     sorted_records = sorted(all_records, key=lambda x: x["time"], reverse=True)
     
@@ -320,7 +388,8 @@ def add_finance_record():
          return jsonify({"success": False, "message": "Unauthorized"}), 403
 
     data = request.json
-    tb_finance.insert(
+    insert_row(
+        tb_finance,
         time=data["time"], 
         money=float(data["money"]),
         people=data["people"],
@@ -335,8 +404,9 @@ def update_finance_record(record_id):
          return jsonify({"success": False, "message": "Unauthorized"}), 403
          
     data = request.json
-    tb_finance.update(
-        (tb_finance["id"] == record_id),
+    update_rows(
+        tb_finance,
+        tb_finance.c.id == record_id,
         time=data["time"],
         money=float(data["money"]),
         people=data["people"],
@@ -350,7 +420,7 @@ def delete_finance_record(record_id):
     if not check_is_admin():
          return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    (tb_finance["id"] == record_id).delete()
+    delete_rows(tb_finance, tb_finance.c.id == record_id)
     return jsonify({"success": True})
 
 
@@ -365,7 +435,7 @@ def submit_suggestion():
     uid = request.cookies.get("hanyun_uid") or "Guest"
     dt = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S")
 
-    tb_feedback.insert(uid=uid, suggestion=suggestion, time=dt)
+    insert_row(tb_feedback, uid=uid, suggestion=suggestion, time=dt)
     return jsonify({"status": "success", "message": "感谢您的建议！"})
 
 
@@ -374,7 +444,7 @@ def get_feedback():
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    feedbacks = tb_feedback.select()
+    feedbacks = select_rows(tb_feedback)
     # Ensure list format
     if len(feedbacks) == 0:
         feedbacks = []
@@ -396,7 +466,7 @@ def delete_feedback(feedback_id):
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    (tb_feedback["id"] == feedback_id).delete()
+    delete_rows(tb_feedback, tb_feedback.c.id == feedback_id)
     return jsonify({"success": True})
 
 
@@ -406,7 +476,7 @@ def check_auth():
     token = request.cookies.get("hanyun_token")
     if not uid or not token:
         return None
-    users = tb_user.select((tb_user["id"] == uid))
+    users = select_rows(tb_user, tb_user.c.id == uid)
     if not users:
         return None
     user = users[0]
@@ -427,7 +497,7 @@ def update_username():
     if not new_username:
         return jsonify({"success": False, "message": "Username cannot be empty"}), 400
 
-    tb_user.update(tb_user["id"] == user["id"], username=new_username)
+    update_rows(tb_user, tb_user.c.id == user["id"], username=new_username)
     return jsonify({"success": True, "username": new_username})
 
 
@@ -451,8 +521,9 @@ def update_profile():
     if not is_valid_avatar_url(avatar):
         return jsonify({"success": False, "message": "Avatar URL must be http/https"}), 400
 
-    tb_user.update(
-        tb_user["id"] == user["id"],
+    update_rows(
+        tb_user,
+        tb_user.c.id == user["id"],
         username=nickname,
         avatar=avatar,
         bio=bio,
