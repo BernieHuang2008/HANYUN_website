@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from '../LanguageContext';
-import { getSafeAvatarUrl } from '../utils/member';
+import { getMemberDisplayName, getSafeAvatarUrl } from '../utils/member';
 
 const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpenMember, onMembersChanged }) => {
   const { t } = useTranslation();
@@ -28,7 +28,7 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
     return allMembers.filter((member) => {
       if (selectedSet.has(member.id)) return false;
       if (!keyword) return true;
-      return (member.nickname || '').toLowerCase().includes(keyword);
+      return getMemberDisplayName(member.nickname).toLowerCase().includes(keyword);
     });
   }, [allMembers, searchKeyword, selectedIds]);
 
@@ -63,17 +63,20 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
 
       <div className="section-title">{t('memberWall')}</div>
       <div className="member-grid">
-        {members.map((member) => (
-          <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
-            <img src={getSafeAvatarUrl(member.avatar)} alt={member.nickname} className="member-avatar" />
-            <div className="member-name">{member.nickname}</div>
-            <div className="member-tooltip">
-              <strong>{member.nickname}</strong>
-              <br />
-              {member.bio || t('noBio')}
-            </div>
-          </button>
-        ))}
+        {members.map((member) => {
+          const displayName = getMemberDisplayName(member.nickname);
+          return (
+            <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
+              <img src={getSafeAvatarUrl(member.avatar)} alt={displayName} className="member-avatar" />
+              <div className="member-name">{displayName}</div>
+              <div className="member-tooltip">
+                <strong>{displayName}</strong>
+                <br />
+                {member.bio || t('noBio')}
+              </div>
+            </button>
+          );
+        })}
         <button className="member-item member-button" onClick={onOpenAllMembers}>
           <div className="member-more">...</div>
           <div className="member-name">{t('more')}</div>
@@ -96,45 +99,51 @@ const MemberWall = ({ isAdminMode, members, allMembers, onOpenAllMembers, onOpen
               <div>
                 <h4>{t('memberCandidates')}</h4>
                 <div className="member-edit-list">
-                  {filteredCandidates.map((member) => (
-                    <button
-                      key={member.id}
-                      className="member-select-row"
-                      onClick={() => setSelectedIds([...selectedIds, member.id])}
-                    >
-                      <img src={getSafeAvatarUrl(member.avatar, 'https://via.placeholder.com/32?text=%E9%9B%85')} alt={member.nickname} className="member-mini-avatar" />
-                      <span>{member.nickname}</span>
-                    </button>
-                  ))}
+                  {filteredCandidates.map((member) => {
+                    const displayName = getMemberDisplayName(member.nickname);
+                    return (
+                      <button
+                        key={member.id}
+                        className="member-select-row"
+                        onClick={() => setSelectedIds([...selectedIds, member.id])}
+                      >
+                        <img src={getSafeAvatarUrl(member.avatar)} alt={displayName} className="member-mini-avatar" />
+                        <span>{displayName}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div>
                 <h4>{t('memberSelected')}</h4>
                 <div className="member-edit-list">
-                  {selectedMembers.map((member, index) => (
-                    <div
-                      key={member.id}
-                      className="member-selected-row"
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const fromIndex = Number(e.dataTransfer.getData('text/plain'));
-                        moveSelectedMember(fromIndex, index);
-                      }}
-                    >
-                      <img src={getSafeAvatarUrl(member.avatar, 'https://via.placeholder.com/32?text=%E9%9B%85')} alt={member.nickname} className="member-mini-avatar" />
-                      <span>{member.nickname}</span>
-                      <button
-                        className="member-remove-btn"
-                        onClick={() => setSelectedIds(selectedIds.filter((id) => id !== member.id))}
+                  {selectedMembers.map((member, index) => {
+                    const displayName = getMemberDisplayName(member.nickname);
+                    return (
+                      <div
+                        key={member.id}
+                        className="member-selected-row"
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const fromIndex = Number(e.dataTransfer.getData('text/plain'));
+                          moveSelectedMember(fromIndex, index);
+                        }}
                       >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                        <img src={getSafeAvatarUrl(member.avatar)} alt={displayName} className="member-mini-avatar" />
+                        <span>{displayName}</span>
+                        <button
+                          className="member-remove-btn"
+                          onClick={() => setSelectedIds(selectedIds.filter((id) => id !== member.id))}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

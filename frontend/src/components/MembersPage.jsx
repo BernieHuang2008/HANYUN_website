@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from '../LanguageContext';
-import { getSafeAvatarUrl } from '../utils/member';
+import { getMemberDisplayName, getSafeAvatarUrl } from '../utils/member';
 
 const MembersPage = ({ members, onBack, onOpenMember }) => {
   const { t } = useTranslation();
@@ -11,17 +11,20 @@ const MembersPage = ({ members, onBack, onOpenMember }) => {
         <button onClick={onBack} style={styles.backBtn}>&larr; {t('cancelBtn')}</button>
         <h2 style={styles.title}>{t('allMembersTitle')}</h2>
         <div className="member-grid">
-          {members.map((member) => (
-            <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
-              <img src={getSafeAvatarUrl(member.avatar)} alt={member.nickname} className="member-avatar" />
-              <div className="member-name">{member.nickname}</div>
-              <div className="member-tooltip">
-                <strong>{member.nickname}</strong>
-                <br />
-                {member.bio || t('noBio')}
-              </div>
-            </button>
-          ))}
+          {members.map((member) => {
+            const displayName = getMemberDisplayName(member.nickname);
+            return (
+              <button key={member.id} className="member-item member-button" onClick={() => onOpenMember(member)}>
+                <img src={getSafeAvatarUrl(member.avatar)} alt={displayName} className="member-avatar" />
+                <div className="member-name">{displayName}</div>
+                <div className="member-tooltip">
+                  <strong>{displayName}</strong>
+                  <br />
+                  {member.bio || t('noBio')}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
