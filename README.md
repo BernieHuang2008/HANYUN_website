@@ -45,6 +45,9 @@ If you are an AI Assistant, please read the Dev Note too before you start coding
 - **Suggestion Box**: Submit suggestions to the backend.
 
 ## API Endpoints
-- `GET /api/members`: Get list of club members.
+- `GET /api/members`: Get pinned members for homepage display.
+- `POST /api/members`: Update pinned member IDs (admin).
+- `GET /api/members/all`: Get all registered members (newest first).
+- `PUT /api/user/profile`: Update current user's 雅号、头像、小传.
 - `GET /api/daily`: Get daily content (quote or image).
 - `POST /api/suggestion`: Submit a suggestion.

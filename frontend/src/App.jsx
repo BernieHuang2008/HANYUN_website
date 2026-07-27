@@ -11,6 +11,8 @@ import Footer from './components/Footer';
 import FinanceSection from './components/FinanceSection';
 import FinancePage from './components/FinancePage';
 import ProfilePage from './components/ProfilePage';
+import MembersPage from './components/MembersPage';
+import MemberDetailPage from './components/MemberDetailPage';
 
 function App() {
   const { t, toggleLanguage, language } = useTranslation();
@@ -18,7 +20,11 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [content, setContent] = useState(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const [view, setView] = useState('home'); // 'home', 'finance', or 'profile'
+  const [view, setView] = useState('home');
+  const [allMembers, setAllMembers] = useState([]);
+  const [displayMembers, setDisplayMembers] = useState([]);
+  const [activeMember, setActiveMember] = useState(null);
+  const [memberDetailBackView, setMemberDetailBackView] = useState('home');
 
   useEffect(() => {
     const storedUser = localStorage.getItem('hanyun_user');
@@ -26,6 +32,8 @@ function App() {
       setUser(JSON.parse(storedUser));
     }
     fetchContent();
+    fetchAllMembers();
+    fetchDisplayMembers();
   }, []);
 
   const fetchContent = () => {
@@ -59,10 +67,30 @@ function App() {
     setView('home');
   };
 
-  const handleUsernameChange = (newUsername) => {
-    const updatedUser = { ...user, username: newUsername };
+  const handleUserUpdate = (updatedUserData) => {
+    const updatedUser = { ...user, ...updatedUserData };
     setUser(updatedUser);
     localStorage.setItem('hanyun_user', JSON.stringify(updatedUser));
+    fetchAllMembers();
+    fetchDisplayMembers();
+  };
+
+  const fetchAllMembers = () => {
+    axios.get('/api/members/all')
+      .then(res => setAllMembers(res.data))
+      .catch(err => console.error("Failed to fetch all members", err));
+  };
+
+  const fetchDisplayMembers = () => {
+    axios.get('/api/members')
+      .then(res => setDisplayMembers(res.data))
+      .catch(err => console.error("Failed to fetch display members", err));
+  };
+
+  const openMemberDetail = (member, backView = 'home') => {
+    setActiveMember(member);
+    setMemberDetailBackView(backView);
+    setView('memberDetail');
   };
 
   if (showLogin) {
@@ -76,7 +104,15 @@ function App() {
   }
 
   if (view === 'profile') {
-    return <ProfilePage user={user} onBack={() => setView('home')} onLogout={handleLogout} onUsernameChange={handleUsernameChange} />;
+    return <ProfilePage user={user} onBack={() => setView('home')} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />;
+  }
+
+  if (view === 'members') {
+    return <MembersPage members={allMembers} onBack={() => setView('home')} onOpenMember={(member) => openMemberDetail(member, 'members')} />;
+  }
+
+  if (view === 'memberDetail') {
+    return <MemberDetailPage member={activeMember} onBack={() => setView(memberDetailBackView)} />;
   }
 
   return (
@@ -92,7 +128,7 @@ function App() {
              </button>
             {user ? (
               <>
-                <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{user.username.replace("🥒", `_${user.id}`)} ({user.id})</span>
+                <span style={{ fontSize: '0.9rem' }}>{t('user_prefix')}{(user.username || '🥒').replace("🥒", `_${user.id}`)} ({user.id})</span>
                 <button
                   onClick={() => setView('profile')}
                   style={{ background: 'transparent', border: '1px solid white', color: 'white', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
@@ -136,7 +172,14 @@ function App() {
       <div className="main-content">
         {/* Left Column */}
         <div className="left-column">
-          <MemberWall isAdminMode={isAdminMode} />
+          <MemberWall
+            isAdminMode={isAdminMode}
+            members={displayMembers}
+            allMembers={allMembers}
+            onOpenAllMembers={() => setView('members')}
+            onOpenMember={(member) => openMemberDetail(member, 'home')}
+            onMembersChanged={fetchDisplayMembers}
+          />
           <Resources 
             data={content?.resources} 
             isAdminMode={isAdminMode} 
