@@ -33,7 +33,7 @@
 - Auth: requires `hanyun_uid` + `hanyun_token` cookies
 - Request:
   - `nickname` (required, max 30)
-  - `avatar` (URL string)
+  - `avatar` (URL string, only `http/https`)
   - `bio`（小传, max 250）
 - Response: updated `user` payload
 
