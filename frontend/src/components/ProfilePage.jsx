@@ -2,33 +2,43 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from '../LanguageContext';
 
-const ProfilePage = ({ user, onBack, onLogout, onUsernameChange }) => {
+const ProfilePage = ({ user, onBack, onLogout, onUserUpdate }) => {
   const { t } = useTranslation();
-  const [newUsername, setNewUsername] = useState('');
+  const [nickname, setNickname] = useState(user?.username || '');
+  const [avatar, setAvatar] = useState(user?.avatar || '');
+  const [bio, setBio] = useState(user?.bio || '');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
 
-  const displayName = user.username.replace('🥒', `_${user.id}`);
+  const displayName = (user?.username || '🥒').replace('🥒', `_${user?.id}`);
 
-  const handleSaveUsername = async (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    if (!newUsername.trim()) return;
+    if (!nickname.trim()) return;
+    if (bio.length > 250) {
+      setMessage(t('bioTooLong'));
+      setIsError(true);
+      return;
+    }
     setSaving(true);
     setMessage('');
     try {
-      const res = await axios.put('/api/user/username', { username: newUsername.trim() });
+      const res = await axios.put('/api/user/profile', {
+        nickname: nickname.trim(),
+        avatar: avatar.trim(),
+        bio: bio.trim(),
+      });
       if (res.data.success) {
-        setMessage(t('usernameUpdated'));
+        setMessage(t('profileUpdated'));
         setIsError(false);
-        onUsernameChange(res.data.username);
-        setNewUsername('');
+        onUserUpdate(res.data.user);
       } else {
-        setMessage(t('usernameUpdateFailed'));
+        setMessage(t('profileUpdateFailed'));
         setIsError(true);
       }
     } catch {
-      setMessage(t('usernameUpdateFailed'));
+      setMessage(t('profileUpdateFailed'));
       setIsError(true);
     } finally {
       setSaving(false);
@@ -37,63 +47,68 @@ const ProfilePage = ({ user, onBack, onLogout, onUsernameChange }) => {
 
   return (
     <div style={styles.pageWrapper}>
-      {/* Decorative top border */}
       <div style={styles.topBorder} />
-
       <div style={styles.container}>
         <button onClick={onBack} style={styles.backBtn}>&larr; {t('cancelBtn')}</button>
-
         <h2 style={styles.pageTitle}>{t('profileTitle')}</h2>
 
-        {/* User card */}
         <div style={styles.card}>
           <div style={styles.cardDecorLine} />
           <div style={styles.avatarCircle}>
-            <span style={styles.avatarChar}>{displayName.charAt(0)}</span>
+            {avatar ? (
+              <img src={avatar} alt={displayName} style={styles.avatarImage} />
+            ) : (
+              <span style={styles.avatarChar}>{displayName.charAt(0)}</span>
+            )}
           </div>
-          <p style={styles.idLabel}>
-            {t('studentNo')}：<span style={styles.idValue}>{user.id}</span>
-          </p>
-          <p style={styles.nameLabel}>
-            {t('user_prefix')}<span style={styles.nameValue}>{displayName}</span>
-          </p>
-          {user.role === 'admin' && (
-            <p style={styles.roleTag}>⚙ {t('manage')}</p>
-          )}
+          <p style={styles.idLabel}>{t('studentNo')}：<span style={styles.idValue}>{user.id}</span></p>
+          <p style={styles.nameLabel}>{t('user_prefix')}<span style={styles.nameValue}>{displayName}</span></p>
+          {user.role === 'admin' && <p style={styles.roleTag}>⚙ {t('manage')}</p>}
           <div style={styles.cardDecorLine} />
         </div>
 
-        {/* Change username form */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>✦ {t('changeUsername')} ✦</h3>
-          <form onSubmit={handleSaveUsername} style={styles.form}>
+          <h3 style={styles.sectionTitle}>✦ {t('profileEditTitle')} ✦</h3>
+          <form onSubmit={handleSaveProfile} style={styles.form}>
             <label style={styles.label}>{t('newUsername')}</label>
             <input
               type="text"
-              value={newUsername}
-              onChange={(e) => setNewUsername(e.target.value)}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
               placeholder={t('enterNewUsername')}
               style={styles.input}
               maxLength={30}
             />
-            {message && (
-              <p style={{ ...styles.msg, color: isError ? '#c0392b' : '#2e7d32' }}>{message}</p>
-            )}
-            <button type="submit" style={styles.saveBtn} disabled={saving || !newUsername.trim()}>
-              {saving ? t('savingUsername') : t('saveUsername')}
+
+            <label style={styles.label}>{t('avatarUrlLabel')}</label>
+            <input
+              type="url"
+              value={avatar}
+              onChange={(e) => setAvatar(e.target.value)}
+              placeholder={t('avatarUrlPlaceholder')}
+              style={styles.input}
+            />
+
+            <label style={styles.label}>{t('memberBioTitle')} ({bio.length}/250)</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder={t('bioPlaceholder')}
+              style={{ ...styles.input, minHeight: '90px', resize: 'vertical' }}
+              maxLength={250}
+            />
+
+            {message && <p style={{ ...styles.msg, color: isError ? '#c0392b' : '#2e7d32' }}>{message}</p>}
+            <button type="submit" style={styles.saveBtn} disabled={saving || !nickname.trim()}>
+              {saving ? t('savingUsername') : t('saveChanges')}
             </button>
           </form>
         </div>
 
-        {/* Logout */}
         <div style={styles.logoutSection}>
-          <button onClick={onLogout} style={styles.logoutBtn}>
-            {t('logout')}
-          </button>
+          <button onClick={onLogout} style={styles.logoutBtn}>{t('logout')}</button>
         </div>
       </div>
-
-      {/* Decorative bottom border */}
       <div style={styles.topBorder} />
     </div>
   );
@@ -125,7 +140,6 @@ const styles = {
     borderRadius: '4px',
     padding: '30px 36px',
     boxShadow: '0 4px 20px rgba(139,0,0,0.12)',
-    position: 'relative',
   },
   backBtn: {
     background: 'transparent',
@@ -146,15 +160,8 @@ const styles = {
     margin: '0 0 24px',
     fontWeight: 'bold',
   },
-  card: {
-    textAlign: 'center',
-    marginBottom: '28px',
-  },
-  cardDecorLine: {
-    width: '60%',
-    margin: '8px auto',
-    borderTop: '1px solid #c8956c',
-  },
+  card: { textAlign: 'center', marginBottom: '28px' },
+  cardDecorLine: { width: '60%', margin: '8px auto', borderTop: '1px solid #c8956c' },
   avatarCircle: {
     width: '72px',
     height: '72px',
@@ -165,31 +172,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     margin: '12px auto',
+    overflow: 'hidden',
   },
-  avatarChar: {
-    color: '#fdf6e3',
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-  },
-  idLabel: {
-    color: '#888',
-    fontSize: '0.9rem',
-    margin: '6px 0',
-  },
-  idValue: {
-    color: '#555',
-    fontWeight: 'bold',
-  },
-  nameLabel: {
-    color: '#555',
-    fontSize: '1.1rem',
-    margin: '6px 0',
-  },
-  nameValue: {
-    color: '#8b0000',
-    fontWeight: 'bold',
-    fontSize: '1.2rem',
-  },
+  avatarImage: { width: '100%', height: '100%', objectFit: 'cover' },
+  avatarChar: { color: '#fdf6e3', fontSize: '1.8rem', fontWeight: 'bold' },
+  idLabel: { color: '#888', fontSize: '0.9rem', margin: '6px 0' },
+  idValue: { color: '#555', fontWeight: 'bold' },
+  nameLabel: { color: '#555', fontSize: '1.1rem', margin: '6px 0' },
+  nameValue: { color: '#8b0000', fontWeight: 'bold', fontSize: '1.2rem' },
   roleTag: {
     display: 'inline-block',
     background: '#8b0000',
@@ -206,22 +196,9 @@ const styles = {
     border: '1px solid #c8956c',
     borderRadius: '4px',
   },
-  sectionTitle: {
-    color: '#8b0000',
-    fontSize: '1rem',
-    letterSpacing: '0.15em',
-    textAlign: 'center',
-    margin: '0 0 14px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  label: {
-    color: '#666',
-    fontSize: '0.9rem',
-  },
+  sectionTitle: { color: '#8b0000', fontSize: '1rem', letterSpacing: '0.15em', textAlign: 'center', margin: '0 0 14px' },
+  form: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  label: { color: '#666', fontSize: '0.9rem' },
   input: {
     padding: '8px 12px',
     border: '1px solid #c8956c',
@@ -232,10 +209,7 @@ const styles = {
     color: '#333',
     outline: 'none',
   },
-  msg: {
-    margin: '0',
-    fontSize: '0.88rem',
-  },
+  msg: { margin: '0', fontSize: '0.88rem' },
   saveBtn: {
     padding: '8px',
     background: '#8b0000',
@@ -246,11 +220,8 @@ const styles = {
     fontFamily: 'inherit',
     fontSize: '1rem',
     letterSpacing: '0.1em',
-    opacity: 1,
   },
-  logoutSection: {
-    textAlign: 'center',
-  },
+  logoutSection: { textAlign: 'center' },
   logoutBtn: {
     padding: '8px 32px',
     background: 'transparent',

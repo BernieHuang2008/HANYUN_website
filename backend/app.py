@@ -3,8 +3,8 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 import json
-import random
 import os
+import hashlib
 import MercurySQL as msql
 import libsql
 
@@ -30,7 +30,18 @@ db = msql.DataBase("hanyun.db", url=url, auth_token=auth_token)
 tb_user = db["user"]
 tb_content = db["content"]
 tb_feedback = db["feedback"]
-tb_user.struct({"id": str, "username": str, "role": str, "pwd": str}, primaryKey="id")
+tb_user.struct(
+    {
+        "id": str,
+        "username": str,
+        "role": str,
+        "pwd": str,
+        "avatar": str,
+        "bio": str,
+        "created_at": str,
+    },
+    primaryKey="id",
+)
 tb_content.struct({"id": str, "json": str}, primaryKey="id")
 tb_feedback.struct(
     {"id": int, "uid": str, "suggestion": str, "time": str},
@@ -62,13 +73,7 @@ def load_default_content():
                 {"url": "/ttt", "title": "ttt"},
             ],
         },
-        "members": [
-            {
-                "name": "张三",
-                "avatar": "url",
-                "detail": "负责整体社团运营与管理。",
-            }
-        ],
+        "member_display_ids": [],
     }
 
     for key, value in defaultc.items():
@@ -96,6 +101,38 @@ def save_content(content_id, content_data):
     tb_content.insert(__auto=True, id=content_id, json=json_data)
 
 
+def get_user_profile(user):
+    username = (user.get("username") or "🥒").strip() or "🥒"
+    avatar = (user.get("avatar") or "").strip()
+    bio = (user.get("bio") or "").strip()
+    created_at = user.get("created_at") or ""
+    return {
+        "id": user["id"],
+        "nickname": username,
+        "avatar": avatar,
+        "bio": bio,
+        "role": user.get("role", "visitor"),
+        "createdAt": created_at,
+    }
+
+
+def cached_json_response(payload, max_age=300):
+    body = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    etag = hashlib.md5(body.encode("utf-8")).hexdigest()
+    response = jsonify(payload)
+    response.set_etag(etag)
+    response.cache_control.public = True
+    response.cache_control.max_age = max_age
+    return response.make_conditional(request)
+
+
+def get_all_members_sorted():
+    users = tb_user.select()
+    members = [get_user_profile(user) for user in users]
+    members.sort(key=lambda x: x.get("createdAt") or "", reverse=True)
+    return members
+
+
 # API: Login
 @app.route("/api/login", methods=["POST"])
 def login():
@@ -117,13 +154,17 @@ def login():
         # User exists, check password
         user = user_data[0]
         if user["pwd"] == password:
+            username = (user.get("username") or "🥒").strip() or "🥒"
             return jsonify(
                 {
                     "success": True,
                     "user": {
                         "id": user["id"],
-                        "username": user["username"],
+                        "username": username,
                         "role": user["role"],
+                        "avatar": (user.get("avatar") or "").strip(),
+                        "bio": (user.get("bio") or "").strip(),
+                        "createdAt": user.get("created_at") or "",
                     },
                 }
             )
@@ -139,6 +180,9 @@ def login():
             "username": "🥒",
             "role": "visitor",  # role Default: visitor
             "pwd": password,
+            "avatar": "",
+            "bio": "",
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
         tb_user.insert(**new_user)
         return jsonify(
@@ -148,6 +192,9 @@ def login():
                     "id": new_user["id"],
                     "username": new_user["username"],
                     "role": new_user["role"],
+                    "avatar": new_user["avatar"],
+                    "bio": new_user["bio"],
+                    "createdAt": new_user["created_at"],
                 },
             }
         )
@@ -174,17 +221,18 @@ def check_is_admin():
 # API: Get all members
 @app.route("/api/members", methods=["GET"])
 def get_members():
-    # Load 'm' (list of {n, a, d, id})
-    short_members = load_content("members")
-    if not isinstance(short_members, list):
-        short_members = []
+    display_ids = load_content("member_display_ids")
+    if not isinstance(display_ids, list):
+        display_ids = []
 
-    # Assign ID if missing for display
-    for m in short_members:
-        if "id" not in m:
-            m["id"] = str(random.randint(10000, 99999))
+    all_members = get_all_members_sorted()
+    member_map = {member["id"]: member for member in all_members}
+    display_members = [member_map[mid] for mid in display_ids if mid in member_map]
 
-    return jsonify(short_members)
+    if not display_members:
+        display_members = all_members[:9]
+
+    return cached_json_response(display_members)
 
 
 # API: Update members
@@ -193,9 +241,26 @@ def update_members():
     if not check_is_admin():
         return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-    data = request.json  # Data uses short keys directly
-    save_content("members", data)
+    data = request.json or {}
+    member_ids = data.get("memberIds")
+    if not isinstance(member_ids, list):
+        return jsonify({"success": False, "message": "memberIds must be a list"}), 400
+
+    normalized_ids = []
+    seen = set()
+    for uid in member_ids:
+        uid = str(uid).strip()
+        if uid and uid not in seen:
+            normalized_ids.append(uid)
+            seen.add(uid)
+
+    save_content("member_display_ids", normalized_ids)
     return jsonify({"success": True})
+
+
+@app.route("/api/members/all", methods=["GET"])
+def get_all_members():
+    return cached_json_response(get_all_members_sorted())
 
 
 # API: Get Content
@@ -353,6 +418,45 @@ def update_username():
 
     tb_user.update(tb_user["id"] == user["id"], username=new_username)
     return jsonify({"success": True, "username": new_username})
+
+
+@app.route("/api/user/profile", methods=["PUT"])
+def update_profile():
+    user = check_auth()
+    if not user:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    data = request.json or {}
+    nickname = (data.get("nickname") or "").strip()
+    avatar = (data.get("avatar") or "").strip()
+    bio = (data.get("bio") or "").strip()
+
+    if not nickname:
+        return jsonify({"success": False, "message": "Nickname cannot be empty"}), 400
+    if len(nickname) > 30:
+        return jsonify({"success": False, "message": "Nickname is too long"}), 400
+    if len(bio) > 250:
+        return jsonify({"success": False, "message": "Bio must be 250 chars or fewer"}), 400
+
+    tb_user.update(
+        tb_user["id"] == user["id"],
+        username=nickname,
+        avatar=avatar,
+        bio=bio,
+    )
+    return jsonify(
+        {
+            "success": True,
+            "user": {
+                "id": user["id"],
+                "username": nickname,
+                "role": user.get("role", "visitor"),
+                "avatar": avatar,
+                "bio": bio,
+                "createdAt": user.get("created_at") or "",
+            },
+        }
+    )
 
 
 if __name__ == "__main__":
